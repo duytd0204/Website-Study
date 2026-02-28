@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudentHub - Hệ Thống Hỗ Trợ Học Tập</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            background: #e5e7eb;
+            color: #374151;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-right: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .schedule-item {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .grade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .note-item {
+            background: #fffbeb;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #fbbf24;
+        }
+
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            background: #f9fafb;
+        }
+
+        .chat-message {
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .chat-message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+
+        .chat-message.bot {
+            background: white;
+            border: 2px solid #e5e7eb;
+        }
+
+        .notification-badge {
+            background: #ef4444;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .gpa-display {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 style="font-size: 32px; font-weight: bold; margin-bottom: 8px;">🎓 StudentHub</h1>
+                    <p style="opacity: 0.9;">Hệ thống hỗ trợ học tập thông minh</p>
+                </div>
+                <div style="text-align: right;">
+                    <div id="currentTime" style="font-size: 18px; font-weight: 600;"></div>
+                    <div id="nextClass" style="font-size: 14px; opacity: 0.9; margin-top: 4px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="card">
+            <button class="tab-button active" onclick="switchTab('schedule')">📅 Lịch Học</button>
+            <button class="tab-button" onclick="switchTab('grades')">📊 Quản Lý Điểm</button>
+            <button class="tab-button" onclick="switchTab('notes')">📝 Ghi Chú</button>
+            <button class="tab-button" onclick="switchTab('roadmap')">🎯 Lộ Trình Học</button>
+            <button class="tab-button" onclick="switchTab('chatbot')">💬 AI Chatbot</button>
+        </div>
+
+        <!-- Schedule Tab -->
+        <div id="scheduleTab" class="tab-content">
+            <div class="card">
+                <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">📅 Lịch Học Của Bạn</h2>
+                
+                <!-- Add Schedule Form -->
+                <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="font-weight: 600; margin-bottom: 12px;">Thêm Lịch Học Mới</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <input type="text" id="courseName" class="input-field" placeholder="Tên môn học">
+                        <input type="text" id="courseCode" class="input-field" placeholder="Mã môn">
+                        <input type="text" id="classroom" class="input-field" placeholder="Phòng học">
+                        <input type="text" id="instructor" class="input-field" placeholder="Giảng viên">
+                        <input type="date" id="classDate" class="input-field">
+                        <input type="time" id="classTime" class="input-field">
+                    </div>
+                    <button class="btn-primary" onclick="addSchedule()">➕ Thêm Lịch Học</button>
+                </div>
+
+                <!-- Schedule List -->
+                <div id="scheduleList"></div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="card">
+                <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">🔔 Thông Báo Nhắc Nhở</h2>
+                <div id="notificationList"></div>
+            </div>
+        </div>
+
+        <!-- Grades Tab -->
+        <div id="gradesTab" class="tab-content hidden">
+            <div class="card">
+                <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">📊 Quản Lý Điểm Số</h2>
+                
+                <!-- GPA Display -->
+                <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 32px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 18px; color: #6b7280; margin-bottom: 8px;">GPA Hiện Tại</div>
+                    <div class="gpa-display" id="currentGPA">0.00</div>
+                    <div style="margin-top: 16px; display: flex; justify-content: space-around;">
+                        <div>
+                            <div style="font-size: 14px; color: #6b7280;">Tín Chỉ Tích Lũy</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #667eea;" id="totalCredits">0</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 14px; color: #6b7280;">Số Môn Đã Học</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #764ba2;" id="totalCourses">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Grade Form -->
+                <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="font-weight: 600; margin-bottom: 12px;">Thêm Điểm Môn Học</h3>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <input type="text" id="gradeCourseName" class="input-field" placeholder="Tên môn học">
+                        <input type="number" id="gradeCredits" class="input-field" placeholder="Số tín chỉ" min="1" max="6">
+                        <input type="number" id="gradeScore" class="input-field" placeholder="Điểm (0-10)" min="0" max="10" step="0.1">
+                    </div>
+                    <button class="btn-primary" onclick="addGrade()">➕ Thêm Điểm</button>
+                </div>
+
+                <!-- Grade List -->
+                <div id="gradeList"></div>
+
+                <!-- GPA Calculator -->
+                <div class="card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                    <h3 style="font-weight: bold; margin-bottom: 16px;">🎯 Tính Toán GPA Mục Tiêu</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <input type="number" id="targetGPA" class="input-field" placeholder="GPA mục tiêu" step="0.01" min="0" max="4">
+                        <input type="number" id="remainingCredits" class="input-field" placeholder="Tín chỉ còn lại" min="1">
+                    </div>
+                    <button class="btn-primary" onclick="calculateTargetGPA()">Tính Toán</button>
+                    <div id="targetGPAResult" style="margin-top: 16px; font-weight: 600;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Tab -->
+        <div id="notesTab" class="tab-content hidden">
+            <div class="card">
+                <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">📝 Ghi Chú Cá Nhân</h2>
+                
+                <!-- Add Note Form -->
+                <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="font-weight: 600; margin-bottom: 12px;">Tạo Ghi Chú Mới</h3>
+                    <input type="text" id="noteTitle" class="input-field" placeholder="Tiêu đề ghi chú" style="margin-bottom: 12px;">
+                    <textarea id="noteContent" class="input-field" placeholder="Nội dung ghi chú..." rows="4" style="margin-bottom: 12px; resize: vertical;"></textarea>
+                    <select id="noteCategory" class="input-field" style="margin-bottom: 12px;">
+                        <option value="">Chọn danh mục</option>
+                        <option value="Bài Giảng">Bài Giảng</option>
+                        <option value="Bài Tập">Bài Tập</option>
+                        <option value="Ôn Thi">Ôn Thi</option>
+                        <option value="Dự Án">Dự Án</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                    <button class="btn-primary" onclick="addNote()">➕ Thêm Ghi Chú</button>
+                </div>
+
+                <!-- Notes List -->
+                <div id="notesList"></div>
+            </div>
+        </div>
+
+        <!-- Roadmap Tab -->
+        <div id="roadmapTab" class="tab-content hidden">
+            <div class="card">
+                <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">🎯 Lộ Trình Học Vượt</h2>
+                
+                <!-- Roadmap Settings -->
+                <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="font-weight: 600; margin-bottom: 12px;">Thiết Lập Mục Tiêu</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <input type="number" id="currentSemester" class="input-field" placeholder="Học kỳ hiện tại" min="1" max="12">
+                        <input type="number" id="totalSemesters" class="input-field" placeholder="Tổng số học kỳ" min="1" max="12">
+                        <input type="number" id="creditsPerSemester" class="input-field" placeholder="Tín chỉ/học kỳ" min="1" max="30">
+                        <input type="number" id="targetGPAGoal" class="input-field" placeholder="GPA mục tiêu" step="0.01" min="0" max="4">
+                    </div>
+                    <button class="btn-primary" onclick="generateRoadmap()">🚀 Tạo Lộ Trình</button>
+                </div>
+
+                <!-- Roadmap Display -->
+                <div id="roadmapDisplay"></div>
+            </div>
+        </div>
+
+        <!-- Chatbot Tab -->
+        <div id="chatbotTab" class="tab-content hidden">
+            <div class="card">
+                <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">💬 AI Chatbot - Trợ Lý Học Tập</h2>
+                
+                <!-- Chat Container -->
+                <div class="chat-container" id="chatContainer">
+                    <div class="chat-message bot">
+                        <strong>AI Assistant:</strong><br>
+                        Xin chào! Tôi là trợ lý AI của bạn. Tôi có thể giúp bạn:
+                        <ul style="margin-top: 8px; margin-left: 20px;">
+                            <li>Giải đáp thắc mắc về kiến thức học tập</li>
+                            <li>Tư vấn phương pháp học tập hiệu quả</li>
+                            <li>Hướng dẫn làm bài tập và giải bài toán</li>
+                            <li>Đề xuất kế hoạch học tập</li>
+                        </ul>
+                        Bạn cần giúp gì nhé?
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div style="margin-top: 16px; display: flex; gap: 12px;">
+                    <input type="text" id="chatInput" class="input-field" placeholder="Nhập câu hỏi của bạn..." onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button class="btn-primary" onclick="sendMessage()">Gửi</button>
+                </div>
+
+                <!-- Quick Questions -->
+                <div style="margin-top: 16px;">
+                    <p style="font-weight: 600; margin-bottom: 8px;">Câu hỏi gợi ý:</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <button class="btn-secondary" onclick="quickQuestion('Làm thế nào để cải thiện điểm GPA?')">Cải thiện GPA</button>
+                        <button class="btn-secondary" onclick="quickQuestion('Phương pháp học tập hiệu quả')">Phương pháp học</button>
+                        <button class="btn-secondary" onclick="quickQuestion('Cách quản lý thời gian học tập')">Quản lý thời gian</button>
+                        <button class="btn-secondary" onclick="quickQuestion('Kỹ năng làm bài thi')">Kỹ năng thi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage
+        let schedules = JSON.parse(localStorage.getItem('schedules')) || [];
+        let grades = JSON.parse(localStorage.getItem('grades')) || [];
+        let notes = JSON.parse(localStorage.getItem('notes')) || [];
+        let chatHistory = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            setInterval(checkNotifications, 60000);
+            renderSchedules();
+            renderGrades();
+            renderNotes();
+            checkNotifications();
+        });
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+            event.target.classList.add('active');
+        }
+
+        // Update Time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateString = now.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('currentTime').textContent = timeString;
+            
+            // Find next class
+            const nextClass = findNextClass();
+            if (nextClass) {
+                document.getElementById('nextClass').textContent = `📚 Tiết tiếp: ${nextClass.courseName} - ${nextClass.classTime}`;
+            } else {
+                document.getElementById('nextClass').textContent = '✅ Không có lớp sắp tới';
+            }
+        }
+
+        // Schedule Functions
+        function addSchedule() {
+            const courseName = document.getElementById('courseName').value;
+            const courseCode = document.getElementById('courseCode').value;
+            const classroom = document.getElementById('classroom').value;
+            const instructor = document.getElementById('instructor').value;
+            const classDate = document.getElementById('classDate').value;
+            const classTime = document.getElementById('classTime').value;
+
+            if (!courseName || !classDate || !classTime) {
+                alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+                return;
+            }
+
+            const schedule = {
+                id: Date.now(),
+                courseName,
+                courseCode,
+                classroom,
+                instructor,
+                classDate,
+                classTime,
+                notified: false
+            };
+
+            schedules.push(schedule);
+            localStorage.setItem('schedules', JSON.stringify(schedules));
+            renderSchedules();
+            
+            // Clear form
+            document.getElementById('courseName').value = '';
+            document.getElementById('courseCode').value = '';
+            document.getElementById('classroom').value = '';
+            document.getElementById('instructor').value = '';
+            document.getElementById('classDate').value = '';
+            document.getElementById('classTime').value = '';
+        }
+
+        function renderSchedules() {
+            const scheduleList = document.getElementById('scheduleList');
+            schedules.sort((a, b) => new Date(a.classDate + ' ' + a.classTime) - new Date(b.classDate + ' ' + b.classTime));
+            
+            scheduleList.innerHTML = schedules.map(schedule => `
+                <div class="schedule-item">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <h3 style="font-weight: bold; font-size: 18px; margin-bottom: 4px;">${schedule.courseName}</h3>
+                            <p style="color: #6b7280; font-size: 14px;">📋 Mã: ${schedule.courseCode || 'N/A'} | 🏫 Phòng: ${schedule.classroom || 'N/A'}</p>
+                            <p style="color: #6b7280; font-size: 14px;">👨‍🏫 GV: ${schedule.instructor || 'N/A'}</p>
+                            <p style="margin-top: 8px; font-weight: 600;">📅 ${new Date(schedule.classDate).toLocaleDateString('vi-VN')} - ⏰ ${schedule.classTime}</p>
+                        </div>
+                        <button class="btn-secondary" onclick="deleteSchedule(${schedule.id})" style="color: #ef4444;">Xóa</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteSchedule(id) {
+            schedules = schedules.filter(s => s.id !== id);
+            localStorage.setItem('schedules', JSON.stringify(schedules));
+            renderSchedules();
+        }
+
+        function findNextClass() {
+            const now = new Date();
+            const upcoming = schedules.filter(schedule => {
+                const scheduleTime = new Date(schedule.classDate + ' ' + schedule.classTime);
+                return scheduleTime > now;
+            }).sort((a, b) => new Date(a.classDate + ' ' + a.classTime) - new Date(b.classDate + ' ' + b.classTime));
+            
+            return upcoming[0];
+        }
+
+        function checkNotifications() {
+            const now = new Date();
+            const notificationList = document.getElementById('notificationList');
+            let notifications = [];
+
+            schedules.forEach(schedule => {
+                const scheduleTime = new Date(schedule.classDate + ' ' + schedule.classTime);
+                const timeDiff = scheduleTime - now;
+                const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+                if (hoursDiff > 0 && hoursDiff <= 24 && !schedule.notified) {
+                    notifications.push({
+                        message: `⏰ Nhắc nhở: Bạn có lớp "${schedule.courseName}" vào ${schedule.classTime} ngày ${new Date(schedule.classDate).toLocaleDateString('vi-VN')}`,
+                        time: Math.round(hoursDiff),
+                        id: schedule.id
+                    });
+                }
+            });
+
+            if (notifications.length > 0) {
+                notificationList.innerHTML = notifications.map(notif => `
+                    <div class="schedule-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="font-weight: 600;">${notif.message}</p>
+                                <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">Còn khoảng ${notif.time} giờ nữa</p>
+                            </div>
+                            <span class="notification-badge">Mới</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                notificationList.innerHTML = '<p style="text-align: center; color: #6b7280;">Không có thông báo mới</p>';
+            }
+        }
+
+        // Grade Functions
+        function addGrade() {
+            const courseName = document.getElementById('gradeCourseName').value;
+            const credits = parseFloat(document.getElementById('gradeCredits').value);
+            const score = parseFloat(document.getElementById('gradeScore').value);
+
+            if (!courseName || !credits || score === '' || score < 0 || score > 10) {
+                alert('Vui lòng điền đầy đủ và chính xác thông tin!');
+                return;
+            }
+
+            const grade = {
+                id: Date.now(),
+                courseName,
+                credits,
+                score,
+                grade4: convertTo4Scale(score)
+            };
+
+            grades.push(grade);
+            localStorage.setItem('grades', JSON.stringify(grades));
+            renderGrades();
+            
+            // Clear form
+            document.getElementById('gradeCourseName').value = '';
+            document.getElementById('gradeCredits').value = '';
+            document.getElementById('gradeScore').value = '';
+        }
+
+        function convertTo4Scale(score) {
+            if (score >= 8.5) return 4.0;
+            if (score >= 8.0) return 3.5;
+            if (score >= 7.0) return 3.0;
+            if (score >= 6.5) return 2.5;
+            if (score >= 5.5) return 2.0;
+            if (score >= 5.0) return 1.5;
+            if (score >= 4.0) return 1.0;
+            return 0;
+        }
+
+        function renderGrades() {
+            const gradeList = document.getElementById('gradeList');
+            const totalCredits = grades.reduce((sum, grade) => sum + grade.credits, 0);
+            const totalPoints = grades.reduce((sum, grade) => sum + (grade.grade4 * grade.credits), 0);
+            const gpa = totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : 0;
+
+            document.getElementById('currentGPA').textContent = gpa;
+            document.getElementById('totalCredits').textContent = totalCredits;
+            document.getElementById('totalCourses').textContent = grades.length;
+
+            gradeList.innerHTML = grades.map(grade => `
+                <div class="grade-item">
+                    <div>
+                        <strong>${grade.courseName}</strong>
+                        <p style="color: #6b7280; font-size: 14px;">Tín chỉ: ${grade.credits}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 24px; font-weight: bold; color: ${grade.score >= 8 ? '#10b981' : grade.score >= 6.5 ? '#f59e0b' : '#ef4444'}">
+                            ${grade.score.toFixed(1)}
+                        </div>
+                        <div style="font-size: 14px; color: #6b7280;">Thang 4: ${grade.grade4.toFixed(1)}</div>
+                    </div>
+                    <button class="btn-secondary" onclick="deleteGrade(${grade.id})" style="color: #ef4444;">Xóa</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteGrade(id) {
+            grades = grades.filter(g => g.id !== id);
+            localStorage.setItem('grades', JSON.stringify(grades));
+            renderGrades();
+        }
+
+        function calculateTargetGPA() {
+            const targetGPA = parseFloat(document.getElementById('targetGPA').value);
+            const remainingCredits = parseFloat(document.getElementById('remainingCredits').value);
+            const currentCredits = grades.reduce((sum, grade) => sum + grade.credits, 0);
+            const currentPoints = grades.reduce((sum, grade) => sum + (grade.grade4 * grade.credits), 0);
+
+            if (!targetGPA || !remainingCredits) {
+                alert('Vui lòng điền đầy đủ thông tin!');
+                return;
+            }
+
+            const totalCredits = currentCredits + remainingCredits;
+            const requiredPoints = (targetGPA * totalCredits) - currentPoints;
+            const requiredGPA = requiredPoints / remainingCredits;
+
+            const resultDiv = document.getElementById('targetGPAResult');
+            
+            if (requiredGPA > 4.0) {
+                resultDiv.innerHTML = `
+                    <div style="background: #fee2e2; padding: 16px; border-radius: 8px; color: #991b1b;">
+                        ❌ Không thể đạt GPA ${targetGPA} với ${remainingCredits} tín chỉ còn lại.
+                        <br>Bạn cần đạt GPA ${requiredGPA.toFixed(2)} (vượt quá thang điểm 4.0)
+                    </div>
+                `;
+            } else if (requiredGPA < 0) {
+                resultDiv.innerHTML = `
+                    <div style="background: #d1fae5; padding: 16px; border-radius: 8px; color: #065f46;">
+                        ✅ Bạn đã đạt GPA ${targetGPA}! Hãy tiếp tục duy trì.
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div style="background: #dbeafe; padding: 16px; border-radius: 8px; color: #1e40af;">
+                        🎯 Để đạt GPA ${targetGPA}, bạn cần đạt trung bình <strong>${requiredGPA.toFixed(2)}</strong> (thang 4) 
+                        trong ${remainingCredits} tín chỉ còn lại.
+                        <br><br>
+                        Tương đương khoảng <strong>${(requiredGPA * 2.5 + 2.5).toFixed(1)}</strong> điểm (thang 10)
+                    </div>
+                `;
+            }
+        }
+
+        // Notes Functions
+        function addNote() {
+            const title = document.getElementById('noteTitle').value;
+            const content = document.getElementById('noteContent').value;
+            const category = document.getElementById('noteCategory').value;
+
+            if (!title || !content) {
+                alert('Vui lòng điền đầy đủ thông tin!');
+                return;
+            }
+
+            const note = {
+                id: Date.now(),
+                title,
+                content,
+                category: category || 'Khác',
+                date: new Date().toLocaleDateString('vi-VN')
+            };
+
+            notes.push(note);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderNotes();
+            
+            // Clear form
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            document.getElementById('noteCategory').value = '';
+        }
+
+        function renderNotes() {
+            const notesList = document.getElementById('notesList');
+            
+            notesList.innerHTML = notes.map(note => `
+                <div class="note-item">
+                    <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <h3 style="font-weight: bold; font-size: 18px;">${note.title}</h3>
+                            <span style="background: #fbbf24; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${note.category}</span>
+                            <span style="margin-left: 8px; color: #6b7280; font-size: 14px;">📅 ${note.date}</span>
+                        </div>
+                        <button class="btn-secondary" onclick="deleteNote(${note.id})" style="color: #ef4444;">Xóa</button>
+                    </div>
+                    <p style="color: #374151; white-space: pre-wrap; line-height: 1.6;">${note.content}</p>
+                </div>
+            `).join('');
+        }
+
+        function deleteNote(id) {
+            notes = notes.filter(n => n.id !== id);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderNotes();
+        }
+
+        // Roadmap Functions
+        function generateRoadmap() {
+            const currentSemester = parseInt(document.getElementById('currentSemester').value);
+            const totalSemesters = parseInt(document.getElementById('totalSemesters').value);
+            const creditsPerSemester = parseInt(document.getElementById('creditsPerSemester').value);
+            const targetGPA = parseFloat(document.getElementById('targetGPAGoal').value);
+
+            if (!currentSemester || !totalSemesters || !creditsPerSemester || !targetGPA) {
+                alert('Vui lòng điền đầy đủ thông tin!');
+                return;
+            }
+
+            const remainingSemesters = totalSemesters - currentSemester + 1;
+            const currentCredits = grades.reduce((sum, grade) => sum + grade.credits, 0);
+            const currentPoints = grades.reduce((sum, grade) => sum + (grade.grade4 * grade.credits), 0);
+            const currentGPA = currentCredits > 0 ? currentPoints / currentCredits : 0;
+
+            const roadmapDisplay = document.getElementById('roadmapDisplay');
+            
+            let roadmapHTML = `
+                <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 24px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="font-weight: bold; font-size: 20px; margin-bottom: 16px;">📊 Phân Tích Hiện Trạng</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                        <div>
+                            <div style="color: #6b7280;">GPA Hiện Tại</div>
+                            <div style="font-size: 32px; font-weight: bold; color: #667eea;">${currentGPA.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div style="color: #6b7280;">Tín Chỉ Đã Học</div>
+                            <div style="font-size: 32px; font-weight: bold; color: #764ba2;">${currentCredits}</div>
+                        </div>
+                        <div>
+                            <div style="color: #6b7280;">Học Kỳ Còn Lại</div>
+                            <div style="font-size: 32px; font-weight: bold; color: #10b981;">${remainingSemesters}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="font-weight: bold; font-size: 20px; margin-bottom: 16px;">🗺️ Lộ Trình Học Tập Đề Xuất</h3>
+            `;
+
+            for (let i = 0; i < remainingSemesters; i++) {
+                const semesterNumber = currentSemester + i;
+                const projectedGPA = Math.min(4.0, currentGPA + (targetGPA - currentGPA) * (i + 1) / remainingSemesters);
+                const targetSemesterGPA = Math.min(4.0, projectedGPA + 0.2);
+
+                roadmapHTML += `
+                    <div class="card" style="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h4 style="font-weight: bold; font-size: 18px;">📚 Học Kỳ ${semesterNumber}</h4>
+                            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+                                GPA mục tiêu: ${targetSemesterGPA.toFixed(2)}
+                            </span>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Tiến độ dự kiến</span>
+                                <span style="font-weight: 600;">${((i + 1) / remainingSemesters * 100).toFixed(0)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${(i + 1) / remainingSemesters * 100}%"></div>
+                            </div>
+                        </div>
+                        <ul style="margin-left: 20px; color: #374151;">
+                            <li>Đăng ký: ${creditsPerSemester} tín chỉ</li>
+                            <li>Điểm trung bình cần đạt: ${(targetSemesterGPA * 2.5 + 2.5).toFixed(1)}/10</li>
+                            <li>Ưu tiên: ${i === 0 ? 'Các môn cơ sở quan trọng' : i < remainingSemesters - 1 ? 'Các môn chuyên ngành' : 'Hoàn thiện đồ án và môn tốt nghiệp'}</li>
+                            <li>Lời khuyên: ${i === 0 ? 'Tập trung xây dựng nền tảng vững chắc' : i < remainingSemesters - 1 ? 'Phát triển kỹ năng chuyên môn' : 'Chuẩn bị tốt nghiệp và tìm kiếm cơ hội việc làm'}</li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            const totalRemainingCredits = remainingSemesters * creditsPerSemester;
+            const requiredPoints = (targetGPA * (currentCredits + totalRemainingCredits)) - currentPoints;
+            const requiredAvgGPA = requiredPoints / totalRemainingCredits;
+
+            roadmapHTML += `
+                <div class="card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                    <h3 style="font-weight: bold; margin-bottom: 12px;">💡 Tóm Tắt & Lời Khuyên</h3>
+                    <ul style="margin-left: 20px; line-height: 1.8;">
+                        <li><strong>GPA trung bình cần đạt:</strong> ${requiredAvgGPA.toFixed(2)} (thang 4) ~ ${(requiredAvgGPA * 2.5 + 2.5).toFixed(1)} (thang 10)</li>
+                        <li><strong>Tổng tín chỉ còn lại:</strong> ${totalRemainingCredits} tín chỉ</li>
+                        <li><strong>Chiến lược:</strong> ${requiredAvgGPA > 3.5 ? 'Cần nỗ lực rất cao, tập trung tối đa vào học tập' : requiredAvgGPA > 3.0 ? 'Cần học tập nghiêm túc và có kế hoạch rõ ràng' : 'Mục tiêu khả thi, duy trì đều đặn'}</li>
+                        <li><strong>Khuyến nghị:</strong> Tham gia nhóm học tập, gặp giảng viên thường xuyên, làm bài tập đầy đủ</li>
+                    </ul>
+                </div>
+            `;
+
+            roadmapDisplay.innerHTML = roadmapHTML;
+        }
+
+        // Chatbot Functions
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message
+            addChatMessage(message, 'user');
+            input.value = '';
+
+            // Show typing indicator
+            const chatContainer = document.getElementById('chatContainer');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chat-message bot';
+            typingDiv.id = 'typing';
+            typingDiv.innerHTML = '<strong>AI Assistant:</strong><br>Đang suy nghĩ...';
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Simulate AI response (in production, this would call Claude API)
+            setTimeout(() => {
+                document.getElementById('typing').remove();
+                const response = generateAIResponse(message);
+                addChatMessage(response, 'bot');
+            }, 1500);
+        }
+
+        function addChatMessage(message, sender) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}`;
+            
+            if (sender === 'bot') {
+                messageDiv.innerHTML = `<strong>AI Assistant:</strong><br>${message}`;
+            } else {
+                messageDiv.innerHTML = `<strong>Bạn:</strong><br>${message}`;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function generateAIResponse(message) {
+            // Simple rule-based responses (in production, use Claude API)
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('gpa') || lowerMessage.includes('điểm')) {
+                return `Để cải thiện GPA, bạn nên:
+                
+1. **Tập trung vào các môn có số tín chỉ cao** - Ảnh hưởng nhiều đến GPA
+2. **Xem lại các môn điểm thấp** - Tìm cách học vượt nếu có thể
+3. **Tham gia nhóm học tập** - Học nhóm giúp hiểu bài sâu hơn
+4. **Gặp giảng viên thường xuyên** - Giải đáp thắc mắc kịp thời
+5. **Quản lý thời gian hiệu quả** - Phân bổ thời gian hợp lý cho các môn
+
+GPA hiện tại của bạn là ${document.getElementById('currentGPA').textContent}. Bạn cần mục tiêu cụ thể nào không?`;
+            }
+            
+            if (lowerMessage.includes('học tập') || lowerMessage.includes('phương pháp')) {
+                return `Các phương pháp học tập hiệu quả:
+
+1. **Pomodoro Technique** - Học 25 phút, nghỉ 5 phút
+2. **Active Recall** - Chủ động nhớ lại kiến thức thay vì đọc lại
+3. **Spaced Repetition** - Ôn tập định kỳ với khoảng cách tăng dần
+4. **Feynman Technique** - Giải thích kiến thức như dạy người khác
+5. **Mind Mapping** - Vẽ sơ đồ tư duy để hệ thống hóa kiến thức
+
+Bạn muốn tôi giải thích chi tiết phương pháp nào không?`;
+            }
+            
+            if (lowerMessage.includes('thời gian') || lowerMessage.includes('quản lý')) {
+                return `Mẹo quản lý thời gian hiệu quả:
+
+1. **Lập kế hoạch cụ thể** - Sử dụng lịch học trong hệ thống
+2. **Ưu tiên công việc** - Ma trận Eisenhower (Quan trọng/Khẩn cấp)
+3. **Tránh trì hoãn** - Bắt đầu với những việc nhỏ nhất
+4. **Loại bỏ phiền nhiễu** - Tắt thông báo khi học tập
+5. **Nghỉ ngơi đầy đủ** - Giấc ngủ quan trọng cho trí nhớ
+
+Bạn có ${schedules.length} lịch học đã lưu. Hãy xem và cập nhật nhé!`;
+            }
+            
+            if (lowerMessage.includes('thi') || lowerMessage.includes('kiểm tra')) {
+                return `Kỹ năng làm bài thi tốt:
+
+1. **Đọc kỹ đề bài** - Hiểu rõ yêu cầu trước khi làm
+2. **Quản lý thời gian** - Phân bổ thời gian cho từng câu/phần
+3. **Làm câu dễ trước** - Đảm bảo điểm tối thiểu
+4. **Kiểm tra lại** - Dành 10-15 phút cuối kiểm tra
+5. **Bình tĩnh** - Hít thở sâu khi gặp câu khó
+
+Trước kỳ thi, hãy:
+- Ôn tập đều đặn, tránh học gạo
+- Tập làm đề cũ
+- Ngủ đủ giấc
+- Ăn uống điều độ`;
+            }
+            
+            // Default response
+            return `Cảm ơn bạn đã đặt câu hỏi! Tôi có thể giúp bạn với:
+
+📚 **Học tập:** Phương pháp học, kỹ thuật ghi nhớ, chiến lược thi cử
+📊 **Quản lý điểm:** Cách cải thiện GPA, tính toán điểm cần thiết
+⏰ **Quản lý thời gian:** Lập kế hoạch, ưu tiên công việc
+🎯 **Định hướng:** Lộ trình học tập, phát triển kỹ năng
+
+Hãy hỏi cụ thể hơn về vấn đề bạn đang gặp phải nhé!`;
+        }
+
+        function quickQuestion(question) {
+            document.getElementById('chatInput').value = question;
+            sendMessage();
+        }
+    </script>
+</body>
+</html>
