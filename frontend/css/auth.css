@@ -1,0 +1,176 @@
+/* ============================================================
+   AUTH PAGES STYLES (Login, Register, Forgot password)
+============================================================ */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  background: var(--bg);
+}
+
+/* Left side - Brand */
+.auth-brand {
+  flex: 1.1;
+  background: linear-gradient(135deg, #003F87 0%, #0066CC 70%, #1E5BA8 100%);
+  color: white;
+  padding: 40px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.auth-brand::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.auth-brand::after {
+  content: '';
+  position: absolute;
+  bottom: -150px;
+  left: -100px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(255,184,0,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.brand-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.brand-logo {
+  width: 56px;
+  height: 56px;
+  background: white;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 22px;
+  color: var(--tlu-primary);
+  letter-spacing: -1px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.brand-title h3 { color: white; margin: 0; font-size: 18px; }
+.brand-title p { color: rgba(255,255,255,0.85); margin: 2px 0 0; font-size: 13px; }
+
+.brand-content {
+  position: relative;
+  z-index: 2;
+  max-width: 480px;
+}
+.brand-content h1 {
+  color: white;
+  font-size: 36px;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  font-weight: 800;
+}
+.brand-content h1 .highlight {
+  color: var(--tlu-accent);
+}
+.brand-content p {
+  color: rgba(255,255,255,0.9);
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+.brand-features {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.brand-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255,255,255,0.95);
+  font-size: 14px;
+}
+.brand-feature-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.15);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.brand-footer {
+  position: relative;
+  z-index: 2;
+  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+}
+
+/* Right side - Form */
+.auth-form-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: var(--bg-card);
+}
+.auth-form {
+  width: 100%;
+  max-width: 420px;
+}
+.auth-form h2 {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+.auth-form .auth-subtitle {
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+.auth-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.auth-form-row .form-group { margin-bottom: 16px; }
+.auth-footer-link {
+  text-align: center;
+  margin-top: 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.auth-footer-link a {
+  font-weight: 600;
+  color: var(--tlu-primary);
+}
+.auth-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  margin-top: 4px;
+}
+.auth-actions a {
+  font-size: 13px;
+  color: var(--tlu-primary);
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .auth-page { flex-direction: column; }
+  .auth-brand { padding: 30px; flex: 0 0 auto; }
+  .auth-brand .brand-content h1 { font-size: 24px; }
+  .auth-form-wrap { padding: 24px; }
+}

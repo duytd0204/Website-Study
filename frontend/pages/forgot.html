@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quên mật khẩu | TLU Learning Support</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/auth.css" />
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-brand">
+      <div class="brand-top">
+        <div class="brand-logo">TLU</div>
+        <div class="brand-title">
+          <h3>Đại học Thủy lợi</h3>
+          <p>Thuyloi University</p>
+        </div>
+      </div>
+      <div class="brand-content">
+        <h1>Khôi phục <span class="highlight">truy cập</span> tài khoản</h1>
+        <p>Chúng tôi sẽ gửi mã xác thực 6 chữ số tới email của bạn để giúp đặt lại mật khẩu một cách an toàn.</p>
+      </div>
+      <div class="brand-footer">© 2026 Trường Đại học Thủy lợi</div>
+    </div>
+
+    <div class="auth-form-wrap">
+      <!-- Bước 1: Nhập email -->
+      <form class="auth-form" id="step1">
+        <h2>Quên mật khẩu</h2>
+        <p class="auth-subtitle">Nhập email bạn đã dùng để đăng ký tài khoản TLU.</p>
+
+        <div class="form-group">
+          <label class="form-label">Email <span class="required">*</span></label>
+          <div class="input-group">
+            <span class="input-icon">✉</span>
+            <input type="email" name="email" class="form-control" placeholder="email@tlu.edu.vn" required />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="sendBtn">
+          Gửi mã xác thực
+        </button>
+
+        <div class="auth-footer-link">
+          <a href="/pages/login.html">← Quay lại Đăng nhập</a>
+        </div>
+      </form>
+
+      <!-- Bước 2: Nhập OTP + mật khẩu mới -->
+      <form class="auth-form hidden" id="step2">
+        <h2>Đặt mật khẩu mới</h2>
+        <p class="auth-subtitle">Mã xác thực đã được gửi tới <strong id="sentEmail"></strong>. Vui lòng kiểm tra hộp thư.</p>
+
+        <div class="form-group">
+          <label class="form-label">Mã xác thực (6 chữ số) <span class="required">*</span></label>
+          <input type="text" name="otp_code" class="form-control" placeholder="123456" maxlength="6" pattern="[0-9]{4,6}" required style="letter-spacing:6px;text-align:center;font-size:18px;font-weight:700" />
+          <p class="form-help">Mã có hiệu lực trong 15 phút</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mật khẩu mới <span class="required">*</span></label>
+          <div class="input-group">
+            <input type="password" name="new_password" class="form-control" placeholder="Tối thiểu 8 ký tự, gồm chữ và số" required minlength="8" />
+            <button type="button" class="input-toggle" data-toggle="password">👁</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="resetBtn">
+          Đặt lại mật khẩu
+        </button>
+
+        <div class="auth-footer-link">
+          <a href="#" id="resendOtp">Gửi lại mã</a> · <a href="/pages/login.html">Quay lại đăng nhập</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('[data-toggle="password"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = btn.parentElement.querySelector('input');
+        input.type = input.type === 'password' ? 'text' : 'password';
+      });
+    });
+
+    let currentEmail = "";
+
+    document.getElementById('step1').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('sendBtn');
+      const email = new FormData(e.target).get('email').trim();
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:white"></span> Đang gửi...';
+      try {
+        await API.forgotPassword(email);
+        currentEmail = email;
+        document.getElementById('sentEmail').textContent = email;
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        Toast.success("Mã xác thực đã được gửi tới email của bạn", "Đã gửi");
+      } catch (err) {
+        Toast.error(err.message || "Gửi mã thất bại");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Gửi mã xác thực';
+      }
+    });
+
+    document.getElementById('step2').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('resetBtn');
+      const fd = new FormData(e.target);
+      const data = {
+        email: currentEmail,
+        otp_code: fd.get('otp_code').trim(),
+        new_password: fd.get('new_password'),
+      };
+      if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(data.new_password)) {
+        Toast.error("Mật khẩu mới phải bao gồm cả chữ và số");
+        return;
+      }
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:white"></span> Đang xử lý...';
+      try {
+        await API.resetPassword(data);
+        Toast.success("Đổi mật khẩu thành công! Đang chuyển về trang đăng nhập...", "Thành công");
+        setTimeout(() => location.href = "/pages/login.html", 1500);
+      } catch (err) {
+        Toast.error(err.message || "Đặt lại mật khẩu thất bại");
+        btn.disabled = false;
+        btn.textContent = 'Đặt lại mật khẩu';
+      }
+    });
+
+    document.getElementById('resendOtp').addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        await API.forgotPassword(currentEmail);
+        Toast.success("Đã gửi lại mã xác thực mới");
+      } catch (err) {
+        Toast.error(err.message || "Gửi lại thất bại");
+      }
+    });
+  </script>
+</body>
+</html>

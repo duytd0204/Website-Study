@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng ký | TLU Learning Support</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/auth.css" />
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-brand">
+      <div class="brand-top">
+        <div class="brand-logo">TLU</div>
+        <div class="brand-title">
+          <h3>Đại học Thủy lợi</h3>
+          <p>Thuyloi University</p>
+        </div>
+      </div>
+      <div class="brand-content">
+        <h1>Tham gia <span class="highlight">cộng đồng</span> sinh viên TLU</h1>
+        <p>Đăng ký để truy cập đầy đủ các công cụ quản lý học tập, AI hỗ trợ và đề xuất lộ trình học vượt cá nhân hóa.</p>
+        <div class="brand-features">
+          <div class="brand-feature">
+            <div class="brand-feature-icon">✓</div>
+            <div>Miễn phí và bảo mật tuyệt đối</div>
+          </div>
+          <div class="brand-feature">
+            <div class="brand-feature-icon">⚡</div>
+            <div>Truy cập tức thì sau khi đăng ký</div>
+          </div>
+          <div class="brand-feature">
+            <div class="brand-feature-icon">🎓</div>
+            <div>Dành riêng cho sinh viên TLU</div>
+          </div>
+        </div>
+      </div>
+      <div class="brand-footer">© 2026 Trường Đại học Thủy lợi</div>
+    </div>
+
+    <div class="auth-form-wrap">
+      <form class="auth-form" id="registerForm" style="max-width:480px">
+        <h2>Đăng ký tài khoản</h2>
+        <p class="auth-subtitle">Điền thông tin để tạo tài khoản sinh viên TLU</p>
+
+        <div class="form-group">
+          <label class="form-label">Họ và tên <span class="required">*</span></label>
+          <input type="text" name="full_name" class="form-control" placeholder="Nguyễn Văn A" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email <span class="required">*</span></label>
+          <input type="email" name="email" class="form-control" placeholder="email@tlu.edu.vn" required />
+          <p class="form-help">Khuyến nghị sử dụng email được cấp bởi nhà trường</p>
+        </div>
+
+        <div class="auth-form-row">
+          <div class="form-group">
+            <label class="form-label">Khóa</label>
+            <input type="text" name="course" class="form-control" placeholder="K65" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Lớp</label>
+            <input type="text" name="class_name" class="form-control" placeholder="65CNTT01" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ngành học</label>
+          <select name="major" class="form-control">
+            <option value="">-- Chọn ngành --</option>
+            <option value="Công nghệ thông tin">Công nghệ thông tin</option>
+            <option value="Kỹ thuật phần mềm">Kỹ thuật phần mềm</option>
+            <option value="Hệ thống thông tin">Hệ thống thông tin</option>
+            <option value="Khoa học máy tính">Khoa học máy tính</option>
+            <option value="Kỹ thuật điều khiển và Tự động hóa">Kỹ thuật điều khiển và Tự động hóa</option>
+            <option value="Kỹ thuật xây dựng">Kỹ thuật xây dựng</option>
+            <option value="Kỹ thuật tài nguyên nước">Kỹ thuật tài nguyên nước</option>
+            <option value="Kế toán">Kế toán</option>
+            <option value="Quản trị kinh doanh">Quản trị kinh doanh</option>
+            <option value="Khác">Khác</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mật khẩu <span class="required">*</span></label>
+          <div class="input-group">
+            <input type="password" name="password" class="form-control" placeholder="Tối thiểu 8 ký tự, gồm chữ và số" required minlength="8" />
+            <button type="button" class="input-toggle" data-toggle="password">👁</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Xác nhận mật khẩu <span class="required">*</span></label>
+          <input type="password" name="confirm_password" class="form-control" placeholder="Nhập lại mật khẩu" required minlength="8" />
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox">
+            <input type="checkbox" name="agree_terms" required />
+            <span>Tôi đồng ý với <a href="#">điều khoản sử dụng</a> và <a href="#">chính sách bảo mật</a></span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="registerBtn">
+          Đăng ký tài khoản
+        </button>
+
+        <div class="auth-footer-link">
+          Đã có tài khoản? <a href="/pages/login.html">Đăng nhập</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('[data-toggle="password"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = btn.parentElement.querySelector('input');
+        input.type = input.type === 'password' ? 'text' : 'password';
+      });
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('registerBtn');
+      const fd = new FormData(e.target);
+      const data = {
+        full_name: fd.get('full_name').trim(),
+        email: fd.get('email').trim(),
+        course: fd.get('course')?.trim() || null,
+        class_name: fd.get('class_name')?.trim() || null,
+        major: fd.get('major') || null,
+        password: fd.get('password'),
+        confirm_password: fd.get('confirm_password'),
+        agree_terms: fd.get('agree_terms') === 'on',
+      };
+
+      if (data.password !== data.confirm_password) {
+        Toast.error("Mật khẩu xác nhận không khớp");
+        return;
+      }
+      if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(data.password)) {
+        Toast.error("Mật khẩu phải bao gồm cả chữ và số");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:white"></span> Đang xử lý...';
+
+      try {
+        await API.register(data);
+        Toast.success("Đăng ký thành công! Hãy đăng nhập để tiếp tục.", "Thành công");
+        setTimeout(() => location.href = "/pages/login.html", 1500);
+      } catch (err) {
+        Toast.error(err.message || "Đăng ký thất bại");
+        btn.disabled = false;
+        btn.textContent = 'Đăng ký tài khoản';
+      }
+    });
+  </script>
+</body>
+</html>

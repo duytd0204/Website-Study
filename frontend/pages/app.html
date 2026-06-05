@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TLU Learning Support</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+</head>
+<body>
+
+<div class="app-layout">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">TLU</div>
+      <div class="sidebar-brand">
+        <h4>Learning Support</h4>
+        <p>Đại học Thủy lợi</p>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">Tổng quan</div>
+      <a class="sidebar-link" data-view="dashboard">
+        <span class="sidebar-link-icon">🏠</span> Trang chủ
+      </a>
+
+      <div class="sidebar-section-title">Học tập</div>
+      <a class="sidebar-link" data-view="schedule">
+        <span class="sidebar-link-icon">📅</span> Lịch học
+      </a>
+      <a class="sidebar-link" data-view="gpa">
+        <span class="sidebar-link-icon">📊</span> Điểm số & GPA
+      </a>
+      <a class="sidebar-link" data-view="curriculum">
+        <span class="sidebar-link-icon">🎓</span> Lộ trình học vượt
+      </a>
+      <a class="sidebar-link" data-view="notes">
+        <span class="sidebar-link-icon">📝</span> Ghi chú
+      </a>
+
+      <div class="sidebar-section-title">Công cụ</div>
+      <a class="sidebar-link" data-view="ocr">
+        <span class="sidebar-link-icon">📸</span> Quét ảnh (AI OCR)
+      </a>
+      <a class="sidebar-link" data-view="chatbot">
+        <span class="sidebar-link-icon">🤖</span> Trợ lý AI
+      </a>
+
+      <div class="sidebar-section-title">Cá nhân</div>
+      <a class="sidebar-link" data-view="profile">
+        <span class="sidebar-link-icon">👤</span> Thông tin cá nhân
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <div class="user-info">
+        <div class="name" id="userName">...</div>
+        <div class="email" id="userEmail">...</div>
+      </div>
+      <button class="btn-logout" id="btnLogout" title="Đăng xuất">↪</button>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <header class="topbar">
+      <button class="topbar-toggle" id="topbarToggle">☰</button>
+      <h2 class="topbar-title" id="pageTitle">Trang chủ</h2>
+
+    </header>
+
+    <main class="content" id="content">
+      <div style="display:flex;align-items:center;justify-content:center;padding:80px 20px">
+        <div class="spinner spinner-lg"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="/js/views/dashboard.js"></script>
+<script src="/js/views/schedule.js"></script>
+<script src="/js/views/gpa.js"></script>
+<script src="/js/views/curriculum.js"></script>
+<script src="/js/views/notes.js"></script>
+<script src="/js/views/ocr.js"></script>
+<script src="/js/views/chatbot.js"></script>
+<script src="/js/views/profile.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
