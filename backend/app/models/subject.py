@@ -62,6 +62,7 @@ class CurriculumSubject(Base):
     semester_default = Column(Integer, nullable=True)        # Kỳ học mặc định trong chương trình
     major = Column(String(255), nullable=True)               # Ngành áp dụng
     prerequisites = Column(String(500), nullable=True)       # Mã môn tiên quyết, phân tách bằng dấu phẩy
+    is_required = Column(Boolean, default=True)                # Môn bắt buộc hay tự chọn
     description = Column(Text, nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

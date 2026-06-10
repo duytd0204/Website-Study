@@ -8,7 +8,7 @@ window.VIEWS.profile = async function(container) {
   container.innerHTML = `
     <div class="page-header">
       <div>
-        <h1>👤 Thông tin cá nhân</h1>
+        <h1>Thông tin cá nhân</h1>
         <p>Quản lý thông tin tài khoản và bảo mật</p>
       </div>
     </div>
@@ -33,7 +33,7 @@ window.VIEWS.profile = async function(container) {
           ${user.is_active ? '<span class="badge badge-success">Đang hoạt động</span>' : '<span class="badge badge-danger">Đã khóa</span>'}
         </div>
         <hr style="margin:24px 0;border:none;border-top:1px solid var(--border-light)">
-        <button class="btn btn-warning btn-block" id="btnChangePassword">🔒 Đổi mật khẩu</button>
+        <button class="btn btn-warning btn-block" id="btnChangePassword">Đổi mật khẩu</button>
       </div>
 
       <!-- Edit form -->
@@ -71,7 +71,7 @@ window.VIEWS.profile = async function(container) {
             <label class="form-label">Số điện thoại</label>
             <input name="phone" class="form-control" value="${escapeHtml(user.phone || "")}" placeholder="0901234567">
           </div>
-          <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
+          <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
         </form>
       </div>
     </div>
@@ -142,9 +142,9 @@ window.VIEWS.profile = async function(container) {
     const footer = document.createElement("div");
     footer.innerHTML = `
       <button type="button" class="btn btn-secondary" data-action="cancel">Hủy</button>
-      <button type="button" class="btn btn-primary" data-action="save">🔒 Đổi mật khẩu</button>
+      <button type="button" class="btn btn-primary" data-action="save">Đổi mật khẩu</button>
     `;
-    const modal = Modal.show({ title: "🔒 Đổi mật khẩu", body: formEl, footer });
+    const modal = Modal.show({ title: "Đổi mật khẩu", body: formEl, footer });
     footer.querySelector('[data-action="cancel"]').onclick = () => modal.close();
     footer.querySelector('[data-action="save"]').onclick = async () => {
       const fd = new FormData(formEl);

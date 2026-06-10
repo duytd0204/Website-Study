@@ -26,12 +26,12 @@
 
     <nav class="sidebar-nav">
       <div class="sidebar-section-title">Quản trị</div>
-      <a class="sidebar-link" data-view="overview"><span class="sidebar-link-icon">📊</span> Tổng quan</a>
-      <a class="sidebar-link" data-view="users"><span class="sidebar-link-icon">👥</span> Người dùng</a>
-      <a class="sidebar-link" data-view="curriculum"><span class="sidebar-link-icon">🎓</span> Chương trình đào tạo</a>
+      <a class="sidebar-link" data-view="overview">Tổng quan</a>
+      <a class="sidebar-link" data-view="users">Người dùng</a>
+      <a class="sidebar-link" data-view="curriculum">Chương trình đào tạo</a>
 
       <div class="sidebar-section-title">Khác</div>
-      <a class="sidebar-link" href="/pages/app.html"><span class="sidebar-link-icon">↪</span> Chuyển sang App</a>
+      <a class="sidebar-link" href="/pages/app.html">Chuyển sang App</a>
     </nav>
 
     <div class="sidebar-footer">
@@ -122,13 +122,13 @@ async function viewOverview(container) {
 
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon">👥</div>
+        <div class="stat-icon"></div>
         <div class="stat-label">Tổng người dùng</div>
         <div class="stat-value">${stats.total_users}</div>
         <div class="stat-change">+${stats.new_users_7d} trong 7 ngày qua</div>
       </div>
       <div class="stat-card success">
-        <div class="stat-icon">✓</div>
+        <div class="stat-icon"></div>
         <div class="stat-label">Đang hoạt động</div>
         <div class="stat-value">${stats.active_users}</div>
         <div class="stat-change">${stats.locked_users} tài khoản bị khóa</div>
@@ -140,7 +140,7 @@ async function viewOverview(container) {
         <div class="stat-change">${stats.admin_count} quản trị viên</div>
       </div>
       <div class="stat-card warning">
-        <div class="stat-icon">🤖</div>
+        <div class="stat-icon"></div>
         <div class="stat-label">Tin nhắn AI Chat</div>
         <div class="stat-value">${stats.total_chats}</div>
         <div class="stat-change">Đã trao đổi</div>
@@ -229,7 +229,7 @@ async function viewUsers(container) {
     const me = getCurrentUser();
     const listEl = document.getElementById("usersList");
     if (data.items.length === 0) {
-      listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">👥</div><p class="text-muted">Không có người dùng nào</p></div>`;
+      listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon"></div><p class="text-muted">Không có người dùng nào</p></div>`;
     } else {
       listEl.innerHTML = `
         <div class="table-wrap">
@@ -303,7 +303,7 @@ async function viewUsers(container) {
       try {
         const r = await API.adminResetPassword(id);
         Modal.show({
-          title: "🔑 Đã đặt lại mật khẩu",
+          title: "Đã đặt lại mật khẩu",
           body: `
             <div class="alert alert-warning">
               <div>
@@ -437,7 +437,7 @@ async function viewCurriculum(container) {
       <button class="btn btn-secondary" data-action="cancel">Hủy</button>
       <button class="btn btn-primary" data-action="save">💾 ${isEdit ? "Cập nhật" : "Thêm"}</button>
     `;
-    const modal = Modal.show({ title: isEdit ? "✏ Sửa môn" : "+ Thêm môn", body: formEl, footer });
+    const modal = Modal.show({ title: isEdit ? "Sửa môn" : "+ Thêm môn", body: formEl, footer });
     footer.querySelector('[data-action="cancel"]').onclick = () => modal.close();
     footer.querySelector('[data-action="save"]').onclick = async () => {
       const fd = new FormData(formEl);

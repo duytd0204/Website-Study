@@ -3,7 +3,7 @@ API Trợ lý ảo AI ChatBot (Gemini API)
 Use Case 3.11: Tra cứu trợ lý ảo AI
 """
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.user import User
@@ -168,3 +168,101 @@ def _generate_suggestions(last_message: str) -> list[str]:
         "Cách viết báo cáo đồ án đại học",
         "Cách quản lý thời gian khi học nhiều môn",
     ]
+
+
+@router.post("/with-file", response_model=ChatResponse)
+async def send_message_with_file(
+    message: str = Form(...),
+    session_id: str = Form(None),
+    file: UploadFile = File(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Gửi tin nhắn kèm file (ảnh hoặc PDF) tới AI.
+    - Nếu là ảnh: dùng Gemini Vision để phân tích ảnh + trả lời
+    - Nếu là PDF/text: trích xuất text rồi gửi AI
+    """
+    import uuid as _uuid
+    s_id = session_id or _uuid.uuid4().hex
+
+    # Đọc nội dung file nếu có
+    file_content = None
+    file_type = None
+    file_info = ""
+
+    if file and file.filename:
+        raw = await file.read()
+        ct = (file.content_type or "").lower()
+        if "image" in ct:
+            file_content = raw
+            file_type = "image"
+            file_info = f" [Kèm ảnh: {file.filename}]"
+        elif "pdf" in ct or file.filename.endswith(".pdf"):
+            # Trích text từ PDF nếu có PyPDF2/pypdf
+            try:
+                import io
+                import pypdf
+                reader = pypdf.PdfReader(io.BytesIO(raw))
+                extracted = "\n".join(p.extract_text() or "" for p in reader.pages)
+                message = message + f"\n\n[Nội dung file {file.filename}]:\n{extracted[:3000]}"
+            except ImportError:
+                message = message + f"\n\n[Người dùng đính kèm PDF: {file.filename} — hệ thống không hỗ trợ đọc PDF tự động]"
+            file_info = f" [Kèm PDF: {file.filename}]"
+        else:
+            try:
+                text = raw.decode("utf-8", errors="replace")
+                message = message + f"\n\n[Nội dung file {file.filename}]:\n{text[:3000]}"
+            except Exception:
+                pass
+            file_info = f" [Kèm file: {file.filename}]"
+
+    # Lịch sử hội thoại
+    history_records = db.query(ChatMessage).filter(
+        ChatMessage.user_id == current_user.id,
+        ChatMessage.session_id == s_id,
+    ).order_by(ChatMessage.created_at.asc()).limit(20).all()
+    history = [{"role": m.role, "content": m.content} for m in history_records]
+
+    # Context sinh viên
+    subjects = db.query(Subject).filter(Subject.user_id == current_user.id).all()
+    gpa_stats = gpa_service.calculate_gpa(subjects)
+    user_context = {
+        "full_name": current_user.full_name,
+        "major": current_user.major,
+        "class_name": current_user.class_name,
+        "course": current_user.course,
+        "gpa_4": gpa_stats["gpa_4"],
+    }
+
+    # Lưu tin nhắn user
+    user_msg = ChatMessage(
+        user_id=current_user.id, session_id=s_id,
+        role="user", content=message + file_info,
+    )
+    db.add(user_msg); db.commit()
+
+    # Gọi AI — nếu có ảnh thì dùng Vision (Gemini), nếu không thì text
+    if file_type == "image" and file_content:
+        reply = await ai_service.chat_with_image(
+            user_message=message,
+            image_bytes=file_content,
+            history=history,
+            user_context=user_context,
+        )
+    else:
+        reply = await ai_service.chat_with_ai(
+            user_message=message,
+            history=history,
+            user_context=user_context,
+        )
+
+    # Lưu phản hồi
+    asst_msg = ChatMessage(
+        user_id=current_user.id, session_id=s_id,
+        role="assistant", content=reply,
+    )
+    db.add(asst_msg); db.commit()
+
+    suggestions = _generate_suggestions(message)
+    return ChatResponse(session_id=s_id, reply=reply, suggestions=suggestions)

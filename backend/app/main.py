@@ -29,15 +29,20 @@ async def lifespan(app: FastAPI):
     # Tạo bảng nếu chưa có
     Base.metadata.create_all(bind=engine)
     print("[Startup] Database initialized")
-    # Migration: thêm cột process_weight nếu chưa có (cho DB cũ)
-    try:
-        from app.core.database import engine as _eng
-        with _eng.connect() as conn:
-            conn.execute(_sa_text("ALTER TABLE subjects ADD COLUMN process_weight FLOAT DEFAULT 0.4"))
-            conn.commit()
-        print("[Migration] Đã thêm cột process_weight")
-    except Exception:
-        pass  # Cột đã tồn tại
+    # Migration: thêm các cột mới cho DB cũ
+    from app.core.database import engine as _eng
+    migrations = [
+        "ALTER TABLE subjects ADD COLUMN process_weight FLOAT DEFAULT 0.4",
+        "ALTER TABLE curriculum_subjects ADD COLUMN is_required BOOLEAN DEFAULT 1",
+        "ALTER TABLE study_plan_items ADD COLUMN id INTEGER",  # handled by create_all
+    ]
+    for sql in migrations:
+        try:
+            with _eng.connect() as conn:
+                conn.execute(_sa_text(sql))
+                conn.commit()
+        except Exception:
+            pass  # Cột đã tồn tại hoặc không cần
 
     # Seed dữ liệu mặc định
     db = SessionLocal()

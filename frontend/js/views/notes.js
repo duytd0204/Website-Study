@@ -15,7 +15,7 @@ window.VIEWS.notes = async function(container) {
     container.innerHTML = `
       <div class="page-header">
         <div>
-          <h1>📝 Ghi chú</h1>
+          <h1>Ghi chú</h1>
           <p>Lưu trữ ý tưởng, bài tập, ghi chú quan trọng theo môn học</p>
         </div>
         <div class="page-actions">
@@ -57,7 +57,7 @@ window.VIEWS.notes = async function(container) {
 
     if (filtered.length === 0) {
       gridEl.innerHTML = `<div class="empty-state">
-        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-icon"></div>
         <div class="empty-state-title">Chưa có ghi chú</div>
         <div class="empty-state-desc">${searchText || activeTag ? "Không tìm thấy ghi chú phù hợp" : "Nhấn '+ Tạo ghi chú' để bắt đầu"}</div>
       </div>`;
@@ -239,11 +239,11 @@ window.VIEWS.notes = async function(container) {
 
     const footer = document.createElement("div");
     footer.innerHTML = `
-      ${isEdit?'<button type="button" class="btn btn-danger" data-action="delete" style="margin-right:auto">🗑 Xóa</button>':""}
+      ${isEdit?'<button type="button" class="btn btn-danger" data-action="delete" style="margin-right:auto">Xóa</button>':""}
       <button type="button" class="btn btn-secondary" data-action="cancel">Hủy</button>
       <button type="button" class="btn btn-primary" data-action="save">💾 ${isEdit?"Cập nhật":"Lưu"}</button>
     `;
-    const modal = Modal.show({ title: isEdit?"✏ Chỉnh sửa ghi chú":"+ Tạo ghi chú mới", body:formEl, footer });
+    const modal = Modal.show({ title: isEdit?"Chỉnh sửa ghi chú":"+ Tạo ghi chú mới", body:formEl, footer });
 
     footer.querySelector('[data-action="cancel"]').onclick = () => modal.close();
     footer.querySelector('[data-action="save"]').onclick = async () => {

@@ -188,7 +188,7 @@ def delete_subject(
 curriculum_router = APIRouter(prefix="/curriculum", tags=["Lộ trình học tập"])
 
 
-@curriculum_router.get("/recommend", response_model=AdvancedStudyRecommendation)
+@curriculum_router.get("/recommend")
 def recommend_study_path(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -205,3 +205,31 @@ def list_curriculum(
 ):
     """Xem toàn bộ chương trình đào tạo"""
     return db.query(CurriculumSubject).order_by(CurriculumSubject.semester_default.nulls_last(), CurriculumSubject.subject_code).all()
+
+
+# ── Study Plan endpoints ──────────────────────────────────────────────────────
+
+@curriculum_router.post("/save-plan")
+def save_study_plan(
+    data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Lưu lộ trình học vượt đã chọn.
+    Body: { "subject_codes": ["CSE411", "CSE421", ...] }
+    """
+    codes = data.get("subject_codes", [])
+    if not codes:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Vui lòng chọn ít nhất 1 môn")
+    return curriculum_service.save_study_plan(db, current_user.id, codes)
+
+
+@curriculum_router.get("/plan")
+def get_study_plan(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Lấy lộ trình học vượt đã lưu của sinh viên"""
+    return curriculum_service.get_study_plan(db, current_user.id)

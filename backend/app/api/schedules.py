@@ -169,3 +169,46 @@ def delete_all_schedules(
     """Xóa toàn bộ lịch học (để nhập lại từ đầu)"""
     db.query(Schedule).filter(Schedule.user_id == current_user.id).delete()
     db.commit()
+
+
+@router.post("/remind-email", status_code=200)
+async def send_reminder_email(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Gửi email nhắc nhở lịch học sắp tới trong 24h cho người dùng hiện tại.
+    Được gọi thủ công hoặc bởi frontend khi phát hiện lịch gần đến.
+    """
+    from app.services.email_service import send_schedule_reminder
+    # Lấy lịch sắp tới bằng cách tái dùng logic của upcoming_reminders
+    from datetime import datetime as _dt, timedelta as _td, date as _date, time as _time
+    schedules = db.query(Schedule).filter(Schedule.user_id == current_user.id).all()
+    now = _dt.now()
+    today_day = now.isoweekday() + 1
+    upcoming = []
+    for s in schedules:
+        days_ahead = s.day_of_week - today_day
+        if days_ahead < 0:
+            days_ahead += 7
+        elif days_ahead == 0:
+            class_dt = _dt.combine(now.date(), s.start_time)
+            if class_dt < now:
+                days_ahead = 7
+        next_class = _dt.combine(now.date() + _td(days=days_ahead), s.start_time)
+        if (next_class - now).total_seconds() <= 24 * 3600:
+            upcoming.append({
+                "subject_name": s.subject_name, "room": s.room, "teacher": s.teacher,
+                "start_time": s.start_time.strftime("%H:%M"),
+                "end_time": s.end_time.strftime("%H:%M"),
+                "minutes_until": int((next_class - now).total_seconds() / 60),
+            })
+    upcoming.sort(key=lambda x: x["minutes_until"])
+    if not upcoming:
+        return {"message": "Không có lịch học nào trong 24h tới", "sent": False}
+
+    try:
+        await send_schedule_reminder(current_user.email, current_user.full_name, upcoming)
+        return {"message": f"Đã gửi nhắc nhở tới {current_user.email}", "sent": True, "count": len(upcoming)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi gửi email: {str(e)}")

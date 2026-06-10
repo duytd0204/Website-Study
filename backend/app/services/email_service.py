@@ -76,3 +76,72 @@ def send_otp_email(to_email: str, otp_code: str, full_name: str = "") -> bool:
     except Exception as e:
         print(f"[Email Service] Lỗi gửi email: {e}")
         return False
+
+
+def _send_html_email(to_email: str, subject: str, html_body: str) -> bool:
+    """Helper dùng chung để gửi email HTML qua SMTP"""
+    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+        print("=" * 60)
+        print(f"[DEV MODE - EMAIL] SMTP chưa cấu hình.")
+        print(f"To: {to_email}  |  Subject: {subject}")
+        print("=" * 60)
+        return True
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = formataddr((settings.SMTP_FROM_NAME, settings.SMTP_USER))
+        msg["To"] = to_email
+        msg.attach(MIMEText(html_body, "html", "utf-8"))
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"[Email Service] Lỗi gửi email: {e}")
+        raise
+
+
+async def send_schedule_reminder(to_email: str, full_name: str, upcoming: list):
+    """Gửi email tổng hợp các lịch học sắp tới trong 24h"""
+    rows = ""
+    for c in upcoming:
+        rows += f"""
+        <tr style="border-bottom:1px solid #eee">
+          <td style="padding:10px 14px"><b>{c.get('subject_name','')}</b></td>
+          <td style="padding:10px 14px">{c.get('start_time','')[:5]} – {c.get('end_time','')[:5]}</td>
+          <td style="padding:10px 14px">{c.get('room') or '—'}</td>
+          <td style="padding:10px 14px">{c.get('teacher') or '—'}</td>
+          <td style="padding:10px 14px;color:#003F87;font-weight:600">
+            {'Còn ' + str(c.get('minutes_until','')) + ' phút' if c.get('minutes_until') else ''}
+          </td>
+        </tr>"""
+
+    html = f"""
+    <div style="font-family:'Be Vietnam Pro',Arial,sans-serif;max-width:600px;margin:0 auto">
+      <div style="background:linear-gradient(135deg,#003F87,#0066CC);color:white;padding:28px 32px;border-radius:12px 12px 0 0">
+        <h1 style="margin:0;font-size:22px">Nhắc nhở lịch học</h1>
+        <p style="margin:8px 0 0;opacity:.85">Đại học Thủy lợi – TLU Learning Support</p>
+      </div>
+      <div style="background:#fff;padding:28px 32px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px">
+        <p>Xin chào <b>{full_name}</b>,</p>
+        <p>Bạn có <b>{len(upcoming)}</b> buổi học trong 24 giờ tới:</p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px">
+          <thead>
+            <tr style="background:#f4f6f9">
+              <th style="padding:10px 14px;text-align:left">Môn học</th>
+              <th style="padding:10px 14px;text-align:left">Giờ</th>
+              <th style="padding:10px 14px;text-align:left">Phòng</th>
+              <th style="padding:10px 14px;text-align:left">Giảng viên</th>
+              <th style="padding:10px 14px;text-align:left">Còn lại</th>
+            </tr>
+          </thead>
+          <tbody>{rows}</tbody>
+        </table>
+        <p style="color:#718096;font-size:13px;margin-top:24px">
+          Email này được gửi tự động bởi TLU Learning Support. Vui lòng không trả lời email này.
+        </p>
+      </div>
+    </div>"""
+
+    _send_html_email(to_email, f"Nhắc nhở: {len(upcoming)} buổi học trong 24h tới – TLU", html)

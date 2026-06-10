@@ -159,6 +159,22 @@ const API = (() => {
     adminDeleteCurriculum: (id) => request(`/admin/curriculum/${id}`, { method: "DELETE" }),
 
     health: () => request("/health"),
+
+    // Curriculum - Study Plan
+    saveStudyPlan: (codes) => request("/curriculum/save-plan", { method: "POST", body: { subject_codes: codes } }),
+    getStudyPlan: () => request("/curriculum/plan"),
+
+    // Chat with file
+    chatWithFile: (message, sessionId, file) => {
+      const fd = new FormData();
+      fd.append("message", message);
+      if (sessionId) fd.append("session_id", sessionId);
+      if (file) fd.append("file", file);
+      return request("/chat/with-file", { method: "POST", body: fd });
+    },
+
+    // Generic request (cho các endpoint đặc biệt)
+    request: (path, options = {}) => request(path, options),
   };
 })();
 

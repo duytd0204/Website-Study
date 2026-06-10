@@ -4,6 +4,7 @@
 window.VIEWS = window.VIEWS || {};
 window.VIEWS.chatbot = async function(container) {
   let sessions = await API.getChatSessions().catch(() => []);
+  let _attachedFile = null;
   let currentSession = null;
   let messages = [];
 
@@ -41,9 +42,17 @@ window.VIEWS.chatbot = async function(container) {
         <div class="chat-main">
           <div class="chat-messages" id="chatMessages"></div>
           <div class="chat-suggestions" id="chatSuggestions"></div>
+          <div id="filePreviewBar" style="display:none;padding:6px 14px;background:var(--info-bg);font-size:12px;border-top:1px solid var(--border-light);display:flex;align-items:center;gap:8px">
+            <span id="filePreviewName" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+            <button onclick="window._chatClearFile()" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:16px;line-height:1">×</button>
+          </div>
           <div class="chat-input-area">
-            <textarea class="chat-input" id="chatInput" placeholder="Đặt câu hỏi cho AI..." rows="1"></textarea>
-            <button class="btn btn-primary" id="btnSendChat" title="Gửi">➤</button>
+            <label title="Đính kèm ảnh / PDF" style="cursor:pointer;padding:8px;color:var(--text-secondary);font-size:18px" id="btnAttach">
+              📎
+              <input type="file" id="chatFileInput" accept="image/*,.pdf,.txt" style="display:none">
+            </label>
+            <textarea class="chat-input" id="chatInput" placeholder="Đặt câu hỏi cho AI... (có thể đính kèm ảnh hoặc PDF)" rows="1"></textarea>
+            <button class="btn btn-primary" id="btnSendChat" title="Gửi">Gửi</button>
           </div>
         </div>
       </div>
@@ -54,6 +63,22 @@ window.VIEWS.chatbot = async function(container) {
 
     document.getElementById("btnNewSession").onclick = () => newSession();
     document.getElementById("btnSendChat").onclick = sendMessage;
+
+  // File attachment
+  document.getElementById("chatFileInput").onchange = (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (f.size > 10 * 1024 * 1024) { Toast.error("File không được lớn hơn 10MB"); return; }
+    _attachedFile = f;
+    const bar = document.getElementById("filePreviewBar");
+    bar.style.display = "flex";
+    document.getElementById("filePreviewName").textContent = "Đính kèm: " + f.name;
+  };
+  window._chatClearFile = () => {
+    _attachedFile = null;
+    document.getElementById("chatFileInput").value = "";
+    document.getElementById("filePreviewBar").style.display = "none";
+  };
     document.getElementById("chatInput").onkeydown = (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -150,8 +175,9 @@ window.VIEWS.chatbot = async function(container) {
     const text = input.value.trim();
     if (!text) return;
 
-    // Push user message
-    messages.push({ role: "user", content: text, created_at: new Date().toISOString() });
+    // Push user message (kèm tên file nếu có)
+    const displayText = _attachedFile ? text + `\n📎 ${_attachedFile.name}` : text;
+    messages.push({ role: "user", content: displayText, created_at: new Date().toISOString() });
     input.value = "";
     input.style.height = "auto";
 
@@ -159,18 +185,21 @@ window.VIEWS.chatbot = async function(container) {
     messages.push({ role: "assistant", content: "...", created_at: new Date().toISOString(), _loading: true });
     renderMessages();
 
+    const fileToSend = _attachedFile;
+    if (_attachedFile) window._chatClearFile();
+
     try {
-      const res = await API.chat(text, currentSession);
-      // Replace loading with actual response
+      const res = fileToSend
+        ? await API.chatWithFile(text, currentSession, fileToSend)
+        : await API.chat(text, currentSession);
       messages.pop();
       messages.push({ role: "assistant", content: res.reply, created_at: new Date().toISOString() });
       renderMessages();
-      // Reload sessions to update
       sessions = await API.getChatSessions().catch(() => []);
       renderSessions();
     } catch (err) {
       messages.pop();
-      messages.push({ role: "assistant", content: "❌ " + err.message, created_at: new Date().toISOString() });
+      messages.push({ role: "assistant", content: "Lỗi: " + err.message, created_at: new Date().toISOString() });
       renderMessages();
     }
   }

@@ -13,14 +13,14 @@ Cấu hình trong .env:
 """
 import json
 import io
+import os
 import re
 import httpx
-import tempfile
-import os
-from paddleocr import PaddleOCR
 from typing import Optional
 from PIL import Image
 from app.core.config import settings
+import tempfile
+from paddleocr import PaddleOCR
 
 
 # ============================================================
@@ -114,8 +114,8 @@ def _init_paddle():
             lang="vi",
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
-            use_textline_orientation=False
-    )
+            use_textline_orientation=False,
+        )
 
     return _paddle_ocr
 
@@ -132,27 +132,18 @@ def _extract_text_with_paddle(image_bytes: bytes) -> str:
 
         result = ocr.predict(temp_path)
 
-        result = ocr.predict(temp_path)
-
-        print("TEXTS:")
-        print(result[0]["rec_texts"])
-
-        print("POLYS:")
-        print(result[0]["dt_polys"])
-
         texts = []
 
         for page in result:
-            texts.extend(page.get("rec_texts", []))
+            if isinstance(page, dict) and "rec_texts" in page:
+                texts.extend(page["rec_texts"])
 
-        return {
-        "texts": result[0]["rec_texts"],
-        "positions": [poly.tolist() for poly in result[0]["dt_polys"]]
-    }
+        return "\n".join(texts)
 
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
 
 def _init_gemini() -> bool:
     """Khởi tạo Gemini SDK (chỉ chạy 1 lần)."""
@@ -224,7 +215,7 @@ async def _groq_chat(user_message: str, history: list[dict], full_system: str) -
         resp.raise_for_status()
         data = resp.json()
         return data["choices"][0]["message"]["content"].strip()
-
+    
 async def _groq_extract_json(prompt: str) -> str:
     payload = {
         "model": settings.GROQ_MODEL,
@@ -296,8 +287,6 @@ async def chat_with_ai(
         if _is_quota_error(err):
             return _friendly_quota_message("Groq" if provider == "groq" else "Gemini")
         return f"⚠️ Có lỗi xảy ra khi gọi AI. Vui lòng thử lại sau."
-    
-
 
 
 # ============================================================
@@ -338,97 +327,21 @@ Nếu không có thông tin nào, để trống chuỗi "" hoặc null. Phải l
 Trả về [] nếu ảnh không chứa thời khóa biểu."""
 
 
-OCR_TRANSCRIPT_PROMPT = """
-Bạn là chuyên gia xử lý dữ liệu OCR tiếng Việt.
+OCR_TRANSCRIPT_PROMPT = """Bạn là chuyên gia trích xuất dữ liệu bảng điểm sinh viên đại học.
+Hãy phân tích ảnh bảng điểm này và trích xuất TẤT CẢ các môn học có trong ảnh.
 
-Dữ liệu đầu vào được trích xuất từ ảnh bằng OCR và có thể chứa:
+Trả về CHỈ MỘT JSON array (không thêm chữ giải thích, không thêm ```json), mỗi phần tử có cấu trúc:
+{
+  "subject_code": "Mã môn (nếu có)",
+  "subject_name": "Tên môn học",
+  "credits": <số tín chỉ, số nguyên>,
+  "total_score_10": <điểm hệ 10, số thực, vd: 7.5>,
+  "letter_grade": "Điểm chữ (A, B+, B, C+, C, D+, D, F) nếu có",
+  "semester": "Học kỳ (vd: 20241, HK1-2024)"
+}
 
-- Lỗi dấu tiếng Việt.
-- Lỗi ký tự đặc biệt.
-- Lỗi nhận dạng chữ cái gần giống nhau.
-- Lỗi xuống dòng.
-- Lỗi tách hoặc ghép cột.
-- Lỗi khoảng trắng.
-- Lỗi nhận dạng số và chữ.
-
-Nhiệm vụ:
-
-1. Tự động sửa lỗi OCR dựa trên ngữ cảnh.
-2. Khôi phục tiếng Việt có dấu nếu ngữ cảnh đủ rõ.
-3. Chuẩn hóa tên môn học, thuật ngữ giáo dục và văn bản tiếng Việt.
-4. Giữ nguyên các mã định danh như:
-   - Mã môn học
-   - MSSV
-   - Số quyết định
-   - Số công văn
-   - CCCD
-   - Mã lớp
-5. Không tự tạo dữ liệu không tồn tại.
-6. Nếu không chắc chắn thì giữ nguyên dữ liệu OCR.
-7. Ưu tiên độ chính xác hơn suy diễn.
-
-Bảng điểm có các cột theo thứ tự:
-
-STT
-Mã môn học
-Tên môn học
-Số tín chỉ
-Thang điểm 10
-Thang điểm 4
-Điểm chữ
-Lần học
-Lần thi
-Là môn tính điểm
-Đánh giá
-
-Chỉ lấy:
-- Mã môn học từ cột Mã môn học
-- Tên môn học từ cột Tên môn học
-- Số tín chỉ từ cột Số tín chỉ
-- Điểm hệ 10 từ cột Thang điểm 10
-- Điểm chữ từ cột Điểm chữ
-
-KHÔNG lấy giá trị từ cột Đánh giá (ĐẠT) làm mã môn học.
-KHÔNG lấy lần học, lần thi hoặc thang điểm 4 làm tín chỉ.
-
-Sau khi chuẩn hóa dữ liệu OCR, hãy trích xuất bảng điểm thành JSON.
-
-Quy đổi điểm chữ sang điểm hệ 10 nếu bảng chỉ có điểm chữ:
-
-A  = 9.0
-B+ = 8.2
-B  = 7.5
-C+ = 6.7
-C  = 6.0
-D+ = 5.2
-D  = 4.5
-F  = 2.0
-
-Nếu OCR cung cấp cả điểm hệ 10 và điểm chữ:
-- Ưu tiên điểm hệ 10 gốc.
-- Không tự tính lại.
-
-Bắt buộc chỉ trả về JSON hợp lệ.
-
-Định dạng:
-
-[
-  {
-    "subject_code": "CSE280",
-    "subject_name": "Ngôn ngữ lập trình",
-    "credits": 4,
-    "total_score_10": 7.5,
-    "letter_grade": "B",
-    "semester": null
-  }
-]
-
-Không thêm giải thích.
-Không thêm markdown.
-Không thêm ```json.
-Chỉ trả về JSON array.
-Trả về [] nếu không phải bảng điểm.
-"""
+Quy đổi nếu chỉ có điểm chữ: A=9.0, B+=8.2, B=7.5, C+=6.7, C=6.0, D+=5.2, D=4.5, F=2.0
+Trả về [] nếu ảnh không chứa bảng điểm."""
 
 
 async def extract_from_image(image_bytes: bytes, image_type: str) -> dict:
@@ -446,16 +359,14 @@ async def extract_from_image(image_bytes: bytes, image_type: str) -> dict:
         }
 
     try:
-        ocr_data = _extract_text_with_paddle(image_bytes)
-        print("========== OCR ==========")
-        print(ocr_data)
+        ocr_text = _extract_text_with_paddle(image_bytes)
 
-        if not ocr_data["texts"]:
-         return {
-            "success": False,
-            "items": [],
-            "message": "Không đọc được nội dung từ ảnh."
-    }
+        if not ocr_text.strip():
+            return {
+                "success": False,
+                "items": [],
+                "message": "Không đọc được nội dung từ ảnh."
+            }
 
         base_prompt = (
             OCR_SCHEDULE_PROMPT
@@ -464,22 +375,15 @@ async def extract_from_image(image_bytes: bytes, image_type: str) -> dict:
         )
 
         prompt = f"""
-            Dưới đây là dữ liệu OCR.
+Dưới đây là văn bản OCR được trích xuất từ ảnh:
 
-            texts chứa nội dung OCR.
-            positions chứa tọa độ của từng text tương ứng.
+{ocr_text}
 
-            Hãy sử dụng positions để xác định các text nào nằm trên cùng một hàng của bảng.
+{base_prompt}
 
-            OCR DATA:
-
-            {json.dumps(ocr_data, ensure_ascii=False)}
-
-            {base_prompt}
-
-            CHỈ trả về JSON hợp lệ.
-            Không giải thích.
-            Không markdown.
+CHỈ trả về JSON hợp lệ.
+Không giải thích.
+Không dùng markdown.
 """
 
         text = await _groq_extract_json(prompt)
@@ -491,10 +395,7 @@ async def extract_from_image(image_bytes: bytes, image_type: str) -> dict:
             ]
             text = "\n".join(lines).strip()
 
-        print("RAW RESPONSE:")
-        print(text)
-
-        items = json.loads(text)  
+        items = json.loads(text)
 
         if not isinstance(items, list):
             items = [items] if isinstance(items, dict) else []
@@ -522,3 +423,60 @@ async def extract_from_image(image_bytes: bytes, image_type: str) -> dict:
             "items": [],
             "message": "Không thể xử lý ảnh."
         }
+
+
+async def chat_with_image(
+    user_message: str,
+    image_bytes: bytes,
+    history: list = None,
+    user_context: dict = None,
+) -> str:
+    """
+    Gửi ảnh + tin nhắn tới Gemini Vision (bắt buộc dùng Gemini).
+    Nếu Gemini chưa cấu hình, trả về thông báo hướng dẫn.
+    """
+    import base64
+
+    genai_client = _init_gemini()
+    if genai_client is None:
+        return (
+            "Tính năng gửi ảnh yêu cầu Gemini API. "
+            "Vui lòng thêm GEMINI_API_KEY vào file .env và khởi động lại server.\n"
+            "Hướng dẫn: https://aistudio.google.com/app/apikey"
+        )
+
+    try:
+        import google.generativeai as genai_lib
+        model = genai_lib.GenerativeModel(settings.GEMINI_MODEL or "gemini-2.0-flash")
+
+        system_ctx = _build_system_prompt(user_context)
+        img_data = base64.b64encode(image_bytes).decode()
+
+        # Build contents với ảnh + text
+        contents = [
+            {"role": "user", "parts": [
+                {"text": system_ctx + "\n\nNgười dùng gửi ảnh kèm câu hỏi:"},
+            ]},
+            {"role": "model", "parts": [{"text": "Tôi đã nhận được. Hãy cho tôi xem ảnh và câu hỏi của bạn."}]},
+        ]
+        # Thêm history
+        for h in (history or []):
+            contents.append({"role": h["role"], "parts": [{"text": h["content"]}]})
+
+        # Tin nhắn cuối có ảnh
+        contents.append({"role": "user", "parts": [
+            {"inline_data": {"mime_type": "image/jpeg", "data": img_data}},
+            {"text": user_message or "Hãy phân tích ảnh này và cho tôi biết nội dung."},
+        ]})
+
+        resp = model.generate_content(contents)
+        return resp.text or "Không thể phân tích ảnh."
+    except Exception as e:
+        err = str(e)
+        if _is_quota_error(err):
+            return (
+                "Gemini đã vượt giới hạn quota. "
+                "Vui lòng thử lại sau hoặc kiểm tra hạn mức tại https://ai.dev/rate-limit."
+            )
+        print(f"[AI Service] Lỗi chat_with_image: {e}")
+        return f"Có lỗi khi phân tích ảnh: {err[:120]}"

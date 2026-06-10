@@ -16,12 +16,13 @@ window.VIEWS.schedule = async function(container) {
   container.innerHTML = `
     <div class="page-header">
       <div>
-        <h1>📅 Lịch học</h1>
+        <h1>Lịch học</h1>
         <p>Quản lý thời khóa biểu hàng tuần · Nhận nhắc nhở 30 phút trước giờ học</p>
       </div>
       <div class="page-actions">
-        <button class="btn btn-secondary" id="btnImportSchedule">📸 Quét từ ảnh</button>
-        <button class="btn btn-danger" id="btnClearAll">🗑 Xóa toàn bộ</button>
+        <button class="btn btn-secondary" id="btnImportSchedule">Quét từ ảnh</button>
+        <button class="btn btn-secondary" id="btnSendReminder">Gửi nhắc qua Gmail</button>
+        <button class="btn btn-danger" id="btnClearAll">Xóa toàn bộ</button>
         <button class="btn btn-primary" id="btnAddSchedule">+ Thêm lịch học</button>
       </div>
     </div>
@@ -96,7 +97,7 @@ window.VIEWS.schedule = async function(container) {
   function renderList() {
     const listEl = document.getElementById("scheduleList");
     if (schedules.length === 0) {
-      listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">Chưa có lịch học</div><div class="empty-state-desc">Nhấn "+ Thêm lịch học" để bắt đầu</div></div>`;
+      listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon"></div><div class="empty-state-title">Chưa có lịch học</div><div class="empty-state-desc">Nhấn "+ Thêm lịch học" để bắt đầu</div></div>`;
       return;
     }
     listEl.innerHTML = `
@@ -123,8 +124,8 @@ window.VIEWS.schedule = async function(container) {
                 <td>${escapeHtml(s.weeks || "-")}</td>
                 <td>
                   <div style="display:flex;gap:4px">
-                    <button class="btn btn-secondary" style="padding:7px 12px;font-size:13px;min-width:70px" data-edit="${s.id}">✏ Sửa</button>
-                    <button class="btn btn-danger" style="padding:7px 12px;font-size:13px;min-width:60px;opacity:0.85" data-del="${s.id}">🗑 Xóa</button>
+                    <button class="btn btn-secondary" style="padding:7px 12px;font-size:13px;min-width:70px" data-edit="${s.id}">Sửa</button>
+                    <button class="btn btn-danger" style="padding:7px 12px;font-size:13px;min-width:60px;opacity:0.85" data-del="${s.id}">Xóa</button>
                   </div>
                 </td>
               </tr>
@@ -213,7 +214,7 @@ window.VIEWS.schedule = async function(container) {
     `;
 
     const modal = Modal.show({
-      title: isEdit ? "✏ Chỉnh sửa lịch học" : "+ Thêm lịch học",
+      title: isEdit ? "Chỉnh sửa lịch học" : "+ Thêm lịch học",
       body: formEl,
       footer,
       size: "md"
@@ -281,6 +282,16 @@ window.VIEWS.schedule = async function(container) {
 
   // Event handlers
   document.getElementById("btnAddSchedule").onclick = () => openScheduleModal();
+  document.getElementById("btnSendReminder").onclick = async () => {
+    const btn = document.getElementById("btnSendReminder");
+    btn.disabled = true; btn.textContent = "Đang gửi...";
+    try {
+      const r = await API.request("/schedules/remind-email", { method: "POST" });
+      if (r && r.sent) Toast.success(`Đã gửi nhắc nhở ${r.count} buổi học qua Gmail`, "Gửi thành công");
+      else Toast.info(r?.message || "Không có lịch học nào trong 24h tới");
+    } catch(e) { Toast.error(e.message || "Lỗi gửi email"); }
+    finally { btn.disabled = false; btn.textContent = "Gửi nhắc qua Gmail"; }
+  };
   document.getElementById("btnImportSchedule").onclick = () => navigateTo("ocr");
   document.getElementById("btnClearAll").onclick = async () => {
     if (schedules.length === 0) {

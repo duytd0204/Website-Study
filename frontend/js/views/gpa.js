@@ -25,12 +25,12 @@ window.VIEWS.gpa = async function(container) {
     container.innerHTML = `
       <div class="page-header">
         <div>
-          <h1>📊 Điểm số & GPA</h1>
+          <h1>Điểm số & GPA</h1>
           <p>Quản lý điểm · Tính GPA tự động · Dự đoán điểm tương lai</p>
         </div>
         <div class="page-actions">
-          <button class="btn btn-secondary" id="btnImportTranscript">📸 Quét bảng điểm</button>
-          <button class="btn btn-warning" id="btnPredict">🔮 Dự đoán GPA</button>
+          <button class="btn btn-secondary" id="btnImportTranscript">Quét bảng điểm</button>
+          <button class="btn btn-warning" id="btnPredict">Dự đoán GPA</button>
           <button class="btn btn-primary" id="btnAddSubject">+ Thêm môn học</button>
         </div>
       </div>
@@ -51,7 +51,7 @@ window.VIEWS.gpa = async function(container) {
           </div>
         </div>
         <div class="stat-card success">
-          <div class="stat-icon">✓</div>
+          <div class="stat-icon"></div>
           <div class="stat-label">Môn đã đạt</div>
           <div class="stat-value">${gpa.completed_subjects || 0}</div>
           <div class="stat-change">${gpa.earned_credits || 0} tín chỉ</div>
@@ -63,7 +63,7 @@ window.VIEWS.gpa = async function(container) {
           <div class="stat-change">${(gpa.failed_subjects||0)>0?"Cần học lại":"Tốt!"}</div>
         </div>
         <div class="stat-card accent">
-          <div class="stat-icon">📚</div>
+          <div class="stat-icon"></div>
           <div class="stat-label">Tổng tín chỉ</div>
           <div class="stat-value">${gpa.total_credits || 0}</div>
           <div class="stat-change">Đã đăng ký</div>
@@ -73,7 +73,7 @@ window.VIEWS.gpa = async function(container) {
       <!-- Bảng điểm tổng + phân trang -->
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">📚 Bảng điểm tổng</h3>
+          <h3 class="card-title">Bảng điểm tổng</h3>
           <div style="display:flex;gap:8px;align-items:center">
             <input type="text" placeholder="Tìm môn..." id="searchSubject" class="form-control"
               style="width:200px;padding:6px 10px;font-size:13px" value="${escapeHtml(searchText)}">
@@ -90,7 +90,7 @@ window.VIEWS.gpa = async function(container) {
       <!-- GPA theo kỳ — Accordion -->
       ${(gpa.by_semester||[]).length > 0 ? `
         <div class="card mt-4">
-          <div class="card-header"><h3 class="card-title">📈 GPA theo học kỳ</h3></div>
+          <div class="card-header"><h3 class="card-title">GPA theo học kỳ</h3></div>
           <div id="semAccordion"></div>
         </div>
       ` : ''}
@@ -121,7 +121,7 @@ window.VIEWS.gpa = async function(container) {
 
     const listEl = document.getElementById("subjectsList");
     if (filtered.length === 0) {
-      listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📚</div>
+      listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon"></div>
         <div class="empty-state-title">Chưa có môn học</div>
         <div class="empty-state-desc">Nhấn "+ Thêm môn học" để bắt đầu</div></div>`;
     } else {
@@ -151,8 +151,8 @@ window.VIEWS.gpa = async function(container) {
                   <td>${s.is_passed?'<span class="badge badge-success">Đạt</span>':s.total_score_10!=null?'<span class="badge badge-danger">Trượt</span>':'<span class="badge badge-secondary">Chưa</span>'}</td>
                   <td>
                     <div style="display:flex;gap:4px">
-                      <button class="btn btn-secondary btn-sm" style="min-width:54px" data-edit="${s.id}">✏ Sửa</button>
-                      <button class="btn btn-danger btn-sm" style="min-width:50px;opacity:0.85" data-del="${s.id}">🗑 Xóa</button>
+                      <button class="btn btn-secondary btn-sm" style="min-width:54px" data-edit="${s.id}">Sửa</button>
+                      <button class="btn btn-danger btn-sm" style="min-width:50px;opacity:0.85" data-del="${s.id}">Xóa</button>
                     </div>
                   </td>
                 </tr>`).join("")}
@@ -353,7 +353,7 @@ window.VIEWS.gpa = async function(container) {
       <button type="button" class="btn btn-secondary" data-action="cancel">Hủy</button>
       <button type="button" class="btn btn-primary" data-action="save">💾 ${isEdit?"Cập nhật":"Thêm"}</button>
     `;
-    const modal = Modal.show({ title: isEdit?"✏ Sửa môn học":"+ Thêm môn học", body:formEl, footer });
+    const modal = Modal.show({ title: isEdit?"Sửa môn học":"+ Thêm môn học", body:formEl, footer });
     footer.querySelector('[data-action="cancel"]').onclick = () => modal.close();
     footer.querySelector('[data-action="save"]').onclick = async () => {
       const fd = new FormData(formEl);
@@ -413,9 +413,9 @@ window.VIEWS.gpa = async function(container) {
     const footer = document.createElement("div");
     footer.innerHTML = `
       <button type="button" class="btn btn-secondary" data-action="cancel">Đóng</button>
-      <button type="button" class="btn btn-primary" data-action="calc">🔮 Tính dự đoán</button>
+      <button type="button" class="btn btn-primary" data-action="calc">Tính dự đoán</button>
     `;
-    const modal = Modal.show({ title:"🔮 Dự đoán GPA", body:formEl, footer, size:"lg" });
+    const modal = Modal.show({ title:"Dự đoán GPA", body:formEl, footer, size:"lg" });
     const rowsEl = formEl.querySelector("#predictRows");
     function addRow() {
       const row = document.createElement("div");

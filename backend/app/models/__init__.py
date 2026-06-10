@@ -14,3 +14,5 @@ __all__ = [
     "Note",
     "ChatMessage",
 ]
+
+from app.models.study_plan import StudyPlanItem

@@ -10,7 +10,7 @@ window.VIEWS.ocr = async function(container) {
   container.innerHTML = `
     <div class="page-header">
       <div>
-        <h1>📸 Quét ảnh với AI OCR</h1>
+        <h1>Quét ảnh với AI OCR</h1>
         <p>Tự động trích xuất thời khóa biểu hoặc bảng điểm từ ảnh chụp</p>
       </div>
     </div>
@@ -40,8 +40,8 @@ window.VIEWS.ocr = async function(container) {
       <div id="previewArea" class="hidden mt-4">
         <img id="previewImg" class="upload-preview" alt="Preview">
         <div class="flex justify-center gap-2 mt-3">
-          <button class="btn btn-secondary" id="btnReset">🔄 Chọn ảnh khác</button>
-          <button class="btn btn-primary" id="btnExtract">🤖 Trích xuất bằng AI</button>
+          <button class="btn btn-secondary" id="btnReset">Chọn ảnh khác</button>
+          <button class="btn btn-primary" id="btnExtract">Trích xuất bằng AI</button>
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ window.VIEWS.ocr = async function(container) {
       Toast.error(err.message);
     } finally {
       btn.disabled = false;
-      btn.innerHTML = '🤖 Trích xuất bằng AI';
+      btn.innerHTML = 'Trích xuất bằng AI';
     }
   };
 
@@ -162,7 +162,7 @@ window.VIEWS.ocr = async function(container) {
         </div>
         <div class="flex justify-end gap-2 mt-4">
           <button class="btn btn-secondary" id="btnCancelSave">Hủy</button>
-          <button class="btn btn-primary" id="btnSaveAll">💾 Lưu toàn bộ vào hệ thống</button>
+          <button class="btn btn-primary" id="btnSaveAll">Lưu toàn bộ vào hệ thống</button>
         </div>
       </div>
     `;
@@ -253,7 +253,7 @@ window.VIEWS.ocr = async function(container) {
         </div>
         <div class="flex justify-end gap-2 mt-4">
           <button class="btn btn-secondary" id="btnCancelSave">Hủy</button>
-          <button class="btn btn-primary" id="btnSaveAll">💾 Lưu toàn bộ vào hệ thống</button>
+          <button class="btn btn-primary" id="btnSaveAll">Lưu toàn bộ vào hệ thống</button>
         </div>
       </div>
     `;
