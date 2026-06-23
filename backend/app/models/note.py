@@ -12,6 +12,11 @@ class Note(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    subject_id = Column(
+        Integer,
+        ForeignKey("subjects.id"),
+        nullable=True
+    )
 
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
@@ -24,4 +29,12 @@ class Note(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
                         onupdate=lambda: datetime.now(timezone.utc))
 
-    user = relationship("User", back_populates="notes")
+    user = relationship(
+        "User",
+        back_populates="notes"
+    )
+
+    subject = relationship(
+        "Subject",
+        back_populates="subject_notes"
+    )

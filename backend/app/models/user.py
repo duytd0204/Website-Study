@@ -3,6 +3,7 @@ Model User - Sinh viên & Quản trị viên
 """
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum as SQLEnum
 from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey
 from datetime import datetime, timezone
 import enum
 from app.core.database import Base
@@ -38,19 +39,80 @@ class User(Base):
                         onupdate=lambda: datetime.now(timezone.utc))
 
     # Quan hệ
-    schedules = relationship("Schedule", back_populates="user", cascade="all, delete-orphan")
-    subjects = relationship("Subject", back_populates="user", cascade="all, delete-orphan")
-    notes = relationship("Note", back_populates="user", cascade="all, delete-orphan")
-    chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")
+    # ── Property (Encapsulation: gói logic kiểm tra quyền ngay trong model) ──
+    @property
+    def is_admin(self) -> bool:
+        """True nếu user có quyền quản trị viên."""
+        return self.role == UserRole.ADMIN
+
+    @property
+    def is_student(self) -> bool:
+        """True nếu user là sinh viên."""
+        return self.role == UserRole.STUDENT
+
+    @property
+    def display_label(self) -> str:
+        """Nhãn hiển thị gọn: 'Họ tên (Lớp)' hoặc chỉ 'Họ tên'."""
+        return f"{self.full_name} ({self.class_name})" if self.class_name else self.full_name
+
+    schedules = relationship(
+        "Schedule",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    subjects = relationship(
+        "Subject",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    notes = relationship(
+        "Note",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    study_plan_items = relationship(
+        "StudyPlanItem",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    password_resets = relationship(
+        "PasswordReset",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    
+    chat_messages = relationship(
+        "ChatMessage",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
 
 
 class PasswordReset(Base):
-    """Lưu mã xác thực OTP cho chức năng quên mật khẩu"""
     __tablename__ = "password_resets"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), index=True, nullable=False)
+    id = Column(Integer, primary_key=True)
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False
+    )
+
     otp_code = Column(String(10), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    created_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc)
+    )
+
+    user = relationship(
+        "User",
+        back_populates="password_resets"
+    )

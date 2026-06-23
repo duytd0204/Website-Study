@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from app.models.user import User
 from app.schemas.chat import OCRResponse
 from app.api.deps import get_current_user
-from app.services import ai_service
+from app.services.ai_service import ai_service
 
 router = APIRouter(prefix="/ocr", tags=["Trích xuất ảnh"])
 

@@ -17,6 +17,12 @@ class Subject(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
+    curriculum_subject_id = Column(
+        Integer,
+        ForeignKey("curriculum_subjects.id"),
+        nullable=True
+    )
 
     subject_code = Column(String(50), nullable=True)         # Mã môn
     subject_name = Column(String(255), nullable=False)       # Tên môn
@@ -45,7 +51,43 @@ class Subject(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
                         onupdate=lambda: datetime.now(timezone.utc))
 
-    user = relationship("User", back_populates="subjects")
+    # ── Property tiện ích (Encapsulation) ────────────────────────────────────
+    @property
+    def has_grade(self) -> bool:
+        """True nếu môn đã có điểm tổng kết."""
+        return self.total_score_10 is not None
+
+    @property
+    def score_summary(self) -> str:
+        """Tóm tắt điểm dạng chuỗi, dùng cho log/hiển thị nhanh."""
+        if not self.has_grade:
+            return f"{self.subject_name}: chưa có điểm"
+        return f"{self.subject_name}: {self.total_score_10}/10 ({self.letter_grade})"
+
+    user = relationship(
+        "User",
+        back_populates="subjects"
+    )
+
+    curriculum_subject = relationship(
+        "CurriculumSubject",
+        back_populates="subjects"
+    )
+
+    schedules = relationship(
+        "Schedule",
+        back_populates="subject"
+    )
+
+    study_plan_items = relationship(
+        "StudyPlanItem",
+        back_populates="subject"
+    )
+
+    subject_notes = relationship(
+        "Note",
+        back_populates="subject"
+    )
 
 
 class CurriculumSubject(Base):
@@ -66,3 +108,20 @@ class CurriculumSubject(Base):
     description = Column(Text, nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    subjects = relationship(
+    "Subject",
+    back_populates="curriculum_subject"
+    )
+
+    # ── Property tiện ích (Encapsulation) ────────────────────────────────────
+    @property
+    def prerequisite_list(self) -> list[str]:
+        """Phân tách chuỗi tiên quyết 'CSE121,MTH101' -> ['CSE121', 'MTH101']."""
+        if not self.prerequisites:
+            return []
+        return [p.strip() for p in self.prerequisites.split(",") if p.strip()]
+
+    def has_passed_prerequisites(self, passed_codes: set[str]) -> bool:
+        """Kiểm tra sinh viên đã đạt hết tiên quyết của môn này chưa."""
+        return all(p in passed_codes for p in self.prerequisite_list)

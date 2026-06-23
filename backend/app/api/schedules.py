@@ -180,7 +180,7 @@ async def send_reminder_email(
     Gửi email nhắc nhở lịch học sắp tới trong 24h cho người dùng hiện tại.
     Được gọi thủ công hoặc bởi frontend khi phát hiện lịch gần đến.
     """
-    from app.services.email_service import send_schedule_reminder
+    from app.services.email_service import email_service
     # Lấy lịch sắp tới bằng cách tái dùng logic của upcoming_reminders
     from datetime import datetime as _dt, timedelta as _td, date as _date, time as _time
     schedules = db.query(Schedule).filter(Schedule.user_id == current_user.id).all()
@@ -208,7 +208,7 @@ async def send_reminder_email(
         return {"message": "Không có lịch học nào trong 24h tới", "sent": False}
 
     try:
-        await send_schedule_reminder(current_user.email, current_user.full_name, upcoming)
+        await email_service.send_reminder(current_user.email, current_user.full_name, upcoming)
         return {"message": f"Đã gửi nhắc nhở tới {current_user.email}", "sent": True, "count": len(upcoming)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi gửi email: {str(e)}")

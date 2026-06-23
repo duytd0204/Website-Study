@@ -15,7 +15,7 @@ from app.schemas.user import (
     UserRegister, UserLogin, Token, UserResponse,
     ForgotPasswordRequest, ResetPasswordRequest, PasswordChange
 )
-from app.services.email_service import send_otp_email
+from app.services.email_service import email_service
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Xác thực"])
@@ -89,12 +89,12 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     # Vô hiệu hóa các OTP cũ
     db.query(PasswordReset).filter(
-        PasswordReset.email == data.email,
+        PasswordReset.user_id == user.id,
         PasswordReset.used == False
     ).update({"used": True})
 
     reset = PasswordReset(
-        email=data.email,
+        user_id=user.id,
         otp_code=otp_code,
         expires_at=expires_at,
     )
@@ -102,7 +102,7 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
 
     # Gửi email
-    success = send_otp_email(data.email, otp_code, user.full_name)
+    success = email_service.send_otp(data.email, otp_code, user.full_name)
     if not success:
         raise HTTPException(
             status_code=500,
@@ -121,11 +121,23 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=msg)
 
     # Tìm OTP
+    user = db.query(User).filter(
+    User.email == data.email
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Email không tồn tại"
+        )
+
     reset = db.query(PasswordReset).filter(
-        PasswordReset.email == data.email,
+        PasswordReset.user_id == user.id,
         PasswordReset.otp_code == data.otp_code,
         PasswordReset.used == False
-    ).order_by(PasswordReset.created_at.desc()).first()
+    ).order_by(
+        PasswordReset.created_at.desc()
+    ).first()
 
     if not reset:
         raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ")

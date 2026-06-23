@@ -1,14 +1,10 @@
 /**
- * Chatbot View - Trợ lý AI (Use Case 3.6)
+ * ChatbotView - Trợ lý AI (Use Case 3.6), hỗ trợ đính kèm ảnh/PDF.
+ * Toàn bộ state hội thoại (sessions, currentSession, messages, file đính
+ * kèm) là thuộc tính instance, không còn biến closure rời rạc.
  */
-window.VIEWS = window.VIEWS || {};
-window.VIEWS.chatbot = async function(container) {
-  let sessions = await API.getChatSessions().catch(() => []);
-  let _attachedFile = null;
-  let currentSession = null;
-  let messages = [];
-
-  const SUGGESTIONS = [
+class ChatbotView extends BaseView {
+  static SUGGESTIONS = [
     "GPA hiện tại của tôi là bao nhiêu?",
     "Tôi nên học vượt môn nào?",
     "Cho tôi tips ôn thi cuối kỳ hiệu quả",
@@ -17,20 +13,26 @@ window.VIEWS.chatbot = async function(container) {
     "Làm sao để cải thiện GPA?",
   ];
 
-  // Generate session ID nếu chưa có
-  if (sessions.length === 0) {
-    currentSession = "sess_" + Date.now();
-  } else {
-    currentSession = sessions[0].session_id;
-    messages = await loadHistory(currentSession);
+  constructor(container) {
+    super(container);
+    this.attachedFile = null;
+    this.messages = [];
   }
 
-  render();
+  async render() {
+    this.sessions = await API.getChatSessions().catch(() => []);
+    if (this.sessions.length === 0) {
+      this.currentSession = "sess_" + Date.now();
+    } else {
+      this.currentSession = this.sessions[0].session_id;
+      this.messages = await this._loadHistory(this.currentSession);
+    }
+    this._renderPage();
+  }
 
-  function render() {
-    container.innerHTML = `
+  _renderPage() {
+    this.setHTML(`
       <div class="chat-container">
-        <!-- Sessions sidebar -->
         <div class="chat-sidebar">
           <div class="chat-sidebar-header">
             <button class="btn btn-primary btn-block btn-sm" id="btnNewSession">+ Cuộc trò chuyện mới</button>
@@ -38,16 +40,15 @@ window.VIEWS.chatbot = async function(container) {
           <div class="chat-sessions" id="sessionsList"></div>
         </div>
 
-        <!-- Chat main -->
         <div class="chat-main">
           <div class="chat-messages" id="chatMessages"></div>
           <div class="chat-suggestions" id="chatSuggestions"></div>
-          <div id="filePreviewBar" style="display:none;padding:6px 14px;background:var(--info-bg);font-size:12px;border-top:1px solid var(--border-light);display:flex;align-items:center;gap:8px">
+          <div id="filePreviewBar" style="display:none;padding:6px 14px;background:var(--info-bg);font-size:12px;border-top:1px solid var(--border-light);align-items:center;gap:8px">
             <span id="filePreviewName" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-            <button onclick="window._chatClearFile()" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:16px;line-height:1">×</button>
+            <button id="btnClearFile" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:16px;line-height:1">×</button>
           </div>
           <div class="chat-input-area">
-            <label title="Đính kèm ảnh / PDF" style="cursor:pointer;padding:8px;color:var(--text-secondary);font-size:18px" id="btnAttach">
+            <label title="Đính kèm ảnh / PDF" style="cursor:pointer;padding:8px;color:var(--text-secondary);font-size:18px">
               📎
               <input type="file" id="chatFileInput" accept="image/*,.pdf,.txt" style="display:none">
             </label>
@@ -56,69 +57,73 @@ window.VIEWS.chatbot = async function(container) {
           </div>
         </div>
       </div>
-    `;
-    renderSessions();
-    renderMessages();
-    renderSuggestions();
+    `);
 
-    document.getElementById("btnNewSession").onclick = () => newSession();
-    document.getElementById("btnSendChat").onclick = sendMessage;
+    this._renderSessions();
+    this._renderMessages();
+    this._renderSuggestions();
+    this._bindEvents();
+  }
 
-  // File attachment
-  document.getElementById("chatFileInput").onchange = (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    if (f.size > 10 * 1024 * 1024) { Toast.error("File không được lớn hơn 10MB"); return; }
-    _attachedFile = f;
-    const bar = document.getElementById("filePreviewBar");
-    bar.style.display = "flex";
-    document.getElementById("filePreviewName").textContent = "Đính kèm: " + f.name;
-  };
-  window._chatClearFile = () => {
-    _attachedFile = null;
-    document.getElementById("chatFileInput").value = "";
-    document.getElementById("filePreviewBar").style.display = "none";
-  };
-    document.getElementById("chatInput").onkeydown = (e) => {
+  _bindEvents() {
+    this.$("#btnNewSession").onclick = () => this._newSession();
+    this.$("#btnSendChat").onclick = () => this._sendMessage();
+    this.$("#btnClearFile").onclick = () => this._clearAttachedFile();
+
+    this.$("#chatFileInput").onchange = (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      if (f.size > 10 * 1024 * 1024) { Toast.error("File không được lớn hơn 10MB"); return; }
+      this.attachedFile = f;
+      const bar = this.$("#filePreviewBar");
+      bar.style.display = "flex";
+      this.$("#filePreviewName").textContent = "Đính kèm: " + f.name;
+    };
+
+    this.$("#chatInput").onkeydown = (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        sendMessage();
+        this._sendMessage();
       }
     };
-    // Auto-resize textarea
-    document.getElementById("chatInput").oninput = (e) => {
+    this.$("#chatInput").oninput = (e) => {
       e.target.style.height = "auto";
       e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
     };
   }
 
-  function renderSessions() {
-    const el = document.getElementById("sessionsList");
-    if (sessions.length === 0) {
+  _clearAttachedFile() {
+    this.attachedFile = null;
+    this.$("#chatFileInput").value = "";
+    this.$("#filePreviewBar").style.display = "none";
+  }
+
+  _renderSessions() {
+    const el = this.$("#sessionsList");
+    if (this.sessions.length === 0) {
       el.innerHTML = `<div class="empty-state" style="padding:20px"><p class="text-sm text-muted">Chưa có cuộc trò chuyện</p></div>`;
       return;
     }
-    el.innerHTML = sessions.map(s => `
-      <div class="chat-session-item ${s.session_id === currentSession ? 'active' : ''}" data-id="${escapeHtml(s.session_id)}">
-        <div class="chat-session-title">${escapeHtml(s.title || "Cuộc trò chuyện")}</div>
-        <div class="chat-session-meta">${timeAgo(s.last_at)} · ${s.message_count} tin</div>
+    el.innerHTML = this.sessions.map(s => `
+      <div class="chat-session-item ${s.session_id === this.currentSession ? 'active' : ''}" data-id="${Formatter.escapeHtml(s.session_id)}">
+        <div class="chat-session-title">${Formatter.escapeHtml(s.title || "Cuộc trò chuyện")}</div>
+        <div class="chat-session-meta">${Formatter.timeAgo(s.last_at)} · ${s.message_count} tin</div>
       </div>
     `).join("");
     el.querySelectorAll(".chat-session-item").forEach(el2 => {
       el2.onclick = async () => {
-        currentSession = el2.dataset.id;
-        messages = await loadHistory(currentSession);
-        render();
+        this.currentSession = el2.dataset.id;
+        this.messages = await this._loadHistory(this.currentSession);
+        this._renderPage();
       };
     });
   }
 
-  function renderMessages() {
-    const el = document.getElementById("chatMessages");
-    if (messages.length === 0) {
+  _renderMessages() {
+    const el = this.$("#chatMessages");
+    if (this.messages.length === 0) {
       el.innerHTML = `
         <div style="text-align:center;padding:48px 20px;color:var(--text-muted)">
-          <div style="font-size:64px;margin-bottom:16px">🤖</div>
           <h3 style="color:var(--text-primary);margin-bottom:8px">Xin chào! Tôi là TLU AI Assistant</h3>
           <p style="margin-bottom:6px">Tôi có thể giúp bạn về học tập, lịch học, điểm số, và các câu hỏi học thuật khác.</p>
           <p class="text-sm">Hãy chọn câu hỏi gợi ý bên dưới hoặc đặt câu hỏi của bạn!</p>
@@ -126,14 +131,14 @@ window.VIEWS.chatbot = async function(container) {
       `;
       return;
     }
-    el.innerHTML = messages.map(m => {
+    el.innerHTML = this.messages.map(m => {
       const isUser = m.role === "user";
       return `
         <div class="chat-msg ${isUser ? 'user' : 'assistant'}">
-          <div class="chat-msg-avatar">${isUser ? "👤" : "🤖"}</div>
+          <div class="chat-msg-avatar">${isUser ? "Tôi" : "AI"}</div>
           <div>
-            <div class="chat-msg-bubble">${escapeHtml(m.content)}</div>
-            <div class="chat-msg-time">${timeAgo(m.created_at)}</div>
+            <div class="chat-msg-bubble">${Formatter.escapeHtml(m.content)}</div>
+            <div class="chat-msg-time">${Formatter.timeAgo(m.created_at)}</div>
           </div>
         </div>
       `;
@@ -141,66 +146,62 @@ window.VIEWS.chatbot = async function(container) {
     el.scrollTop = el.scrollHeight;
   }
 
-  function renderSuggestions() {
-    const el = document.getElementById("chatSuggestions");
-    if (messages.length > 0) {
-      el.innerHTML = "";
-      return;
-    }
-    el.innerHTML = SUGGESTIONS.map(s => `<button class="chat-suggestion" data-text="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("");
+  _renderSuggestions() {
+    const el = this.$("#chatSuggestions");
+    if (this.messages.length > 0) { el.innerHTML = ""; return; }
+    el.innerHTML = ChatbotView.SUGGESTIONS.map(s =>
+      `<button class="chat-suggestion" data-text="${Formatter.escapeHtml(s)}">${Formatter.escapeHtml(s)}</button>`
+    ).join("");
     el.querySelectorAll(".chat-suggestion").forEach(b => {
       b.onclick = () => {
-        document.getElementById("chatInput").value = b.dataset.text;
-        sendMessage();
+        this.$("#chatInput").value = b.dataset.text;
+        this._sendMessage();
       };
     });
   }
 
-  async function loadHistory(sessionId) {
-    try {
-      return await API.getChatHistory(sessionId);
-    } catch (e) {
-      return [];
-    }
+  async _loadHistory(sessionId) {
+    try { return await API.getChatHistory(sessionId); }
+    catch (e) { return []; }
   }
 
-  function newSession() {
-    currentSession = "sess_" + Date.now();
-    messages = [];
-    render();
+  _newSession() {
+    this.currentSession = "sess_" + Date.now();
+    this.messages = [];
+    this._renderPage();
   }
 
-  async function sendMessage() {
-    const input = document.getElementById("chatInput");
+  async _sendMessage() {
+    const input = this.$("#chatInput");
     const text = input.value.trim();
     if (!text) return;
 
-    // Push user message (kèm tên file nếu có)
-    const displayText = _attachedFile ? text + `\n📎 ${_attachedFile.name}` : text;
-    messages.push({ role: "user", content: displayText, created_at: new Date().toISOString() });
+    const displayText = this.attachedFile ? text + `\n[Đính kèm: ${this.attachedFile.name}]` : text;
+    this.messages.push({ role: "user", content: displayText, created_at: new Date().toISOString() });
     input.value = "";
     input.style.height = "auto";
 
-    // Add loading
-    messages.push({ role: "assistant", content: "...", created_at: new Date().toISOString(), _loading: true });
-    renderMessages();
+    this.messages.push({ role: "assistant", content: "...", created_at: new Date().toISOString(), _loading: true });
+    this._renderMessages();
 
-    const fileToSend = _attachedFile;
-    if (_attachedFile) window._chatClearFile();
+    const fileToSend = this.attachedFile;
+    if (this.attachedFile) this._clearAttachedFile();
 
     try {
       const res = fileToSend
-        ? await API.chatWithFile(text, currentSession, fileToSend)
-        : await API.chat(text, currentSession);
-      messages.pop();
-      messages.push({ role: "assistant", content: res.reply, created_at: new Date().toISOString() });
-      renderMessages();
-      sessions = await API.getChatSessions().catch(() => []);
-      renderSessions();
+        ? await API.chatWithFile(text, this.currentSession, fileToSend)
+        : await API.chat(text, this.currentSession);
+      this.messages.pop();
+      this.messages.push({ role: "assistant", content: res.reply, created_at: new Date().toISOString() });
+      this._renderMessages();
+      this.sessions = await API.getChatSessions().catch(() => []);
+      this._renderSessions();
     } catch (err) {
-      messages.pop();
-      messages.push({ role: "assistant", content: "Lỗi: " + err.message, created_at: new Date().toISOString() });
-      renderMessages();
+      this.messages.pop();
+      this.messages.push({ role: "assistant", content: "Lỗi: " + err.message, created_at: new Date().toISOString() });
+      this._renderMessages();
     }
   }
-};
+}
+
+BaseView.register("chatbot", ChatbotView);

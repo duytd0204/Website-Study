@@ -11,7 +11,8 @@ from app.models.chat import ChatMessage
 from app.models.subject import Subject
 from app.schemas.chat import ChatRequest, ChatResponse, ChatMessageResponse
 from app.api.deps import get_current_user
-from app.services import ai_service, gpa_service
+from app.services.ai_service import ai_service
+from app.services.gpa_service import gpa_service
 
 router = APIRouter(prefix="/chat", tags=["Trợ lý AI"])
 
@@ -56,7 +57,7 @@ async def send_message(
     db.commit()
 
     # Gọi AI
-    reply = await ai_service.chat_with_ai(
+    reply = await ai_service.chat(
         user_message=data.message,
         history=history,
         user_context=user_context,
@@ -251,7 +252,7 @@ async def send_message_with_file(
             user_context=user_context,
         )
     else:
-        reply = await ai_service.chat_with_ai(
+        reply = await ai_service.chat(
             user_message=message,
             history=history,
             user_context=user_context,
